@@ -1,0 +1,288 @@
+<!doctype html>
+<html>
+<head>
+<title>Hello</title>
+<link rel="stylesheet" href="main.css">
+</head>
+<body>
+<div class="content">
+Goal:
+A no bullshit systems programming language that improves upon C while still feeling low level
+<br>
+structured programming (if, while, scopes)
+no hidden complexity
+closely reflects hardware
+made for x64
+<br>
+? multipointer, dyn array, ...
+<div class="code">&type     - pointer, pointer to * elements
+[]type    - slice,   pointer to N(mutable) elements, convenience ptr + length
+[N]type   - array,   pointer to N(immutable) elements
+</div>
+<br>
+? overflow, bounds checking, implicit casting
+<div class="code">ident, <span class="code_number">0</span>, "", '', true, <span class="code_keyword">proc</span>, <span class="code_keyword">struct</span>, <span class="code_keyword">union</span>, <span class="code_keyword">enum</span>, .[], .{}, .(), .b, (expr)
+(), [N], [N:N], a.b, ^
+[], [N], ^
+a.[], a.{}, a.()
++, -, ~, !
+.., ..<
+*, /, %, &, >>, >>>, <<, <<<
++, -, |, ~
+==, !=, <, >, <=, >=
+&&
+||
+:?
+	
+	
+""   - utf8 string
+''   - ASCII character
+%    - truncated division remainder
+<<   - logical right shift
+>>>  - arithmetic right shift
+a.b  - auto deref member access
+all shifts are masked
+
+maybe
+<<< - splat bits to left YES, >>> is already kind of arbitrary, and <<< is usefull
+<span class="code_keyword">u32</span> wraps on overflow, <span class="code_keyword">uint</span> traps
+%+ is <span class="code_keyword">for</span> wrapping addition, + is <span class="code_keyword">for</span> trapping addition
+</div>
+<br>
+? Polymorphism
+<div class="code">proc(args) -> ret_val { body }
+<span class="code_keyword">proc</span>(args) -> (name: ret_type, name: ret_type)  { body }
+<span class="code_keyword">struct</span> { body }
+<span class="code_keyword">union</span> { body }
+<span class="code_keyword">enum</span> { body }
+</div>
+<br>
+<div class="code">:label <span class="code_keyword">if</span> (init; condition) statement
+when (init; condition) statement
+else statement
+:label <span class="code_keyword">while</span> (init; condition; step) statement
+:label { block }
+defer statement
+return .a = <span class="code_number">0</span>, .b = <span class="code_number">1</span>
+using expr as alias
+break label
+continue label
+a ?= b
+</div>
+<br>
+<div class="code">a, b, c: a = a, b, c; <span class="code_comment">// ---</span>
+a, b, c :: a, b, c;
+include "file" as alias
+</div>
+<br>
+
+<br>
+
+<br>
+Should: using expr as expr. Why not
+using expr
+convenience, may be better for aliasing than 
+a: struct { x, y: int; };
+using a;
+x = 0;
+y = 1;
+<br>
+combined with auto deref gives abstraction over structure without affecting usage
+<div class="code">Pos :: <span class="code_keyword">struct</span>
+{
+	x, y, z: <span class="code_keyword">int</span>;
+};
+
+p: Pos;
+print(p.x, p.y, p.z);
+</div>
+<div class="code">Pos_Cold :: <span class="code_keyword">struct</span>
+{
+	x, y: <span class="code_keyword">int</span>;
+};
+
+Pos :: <span class="code_keyword">struct</span>
+{
+	using cold: ^Pos_Cold;
+	z: <span class="code_keyword">int</span>;
+};
+
+cold: Pos_Cold;
+p: Pos.{ cold = &cold, z = <span class="code_number">1</span> };
+print(p.x, p.y, p.z);
+</div>
+allows assigning to multiple fields without affecting usage
+<br>
+using expr as expr
+<br>
+
+<br>
+return assignment and aggregate init assignment syntax
+either assignment is an expression and sema roots out illegal uses or a = b cannot be the syntax used
+alternate syntaxes
+Just stick with a = b, but do it only in cases where it is legal, disjoint representation from =
+<br>
+
+<br>
+
+Polymorhism
+Macros
+Compile Time Execution
+<br>
+
+<br>
+Metaprogramming
+<br>
+pointer syntax: is this still a problem?
+<div class="code">^<span class="code_keyword">int</span>, ^x
+&<span class="code_keyword">int</span>, &x
+</div>
+problems:
+- cannot discern between pointer and pointer type
+<div class="code">^<span class="code_keyword">int</span>.(<span class="code_number">0</span>) <span class="code_comment">// ambigous: pointer_to_int.(0) or pointer_to(int.(0))</span>
+</div>
+<br>
+This should probably only affect parsing and typeid
+<div class="code">a: typeid = <span class="code_number">0</span>;
+b: ^typeid = <span class="code_number">0</span>;
+c := ^a; <span class="code_comment">// is this a pointer type or a pointer to a typeid</span>
+
+A :: typeid.(<span class="code_number">0</span>);
+C :: ^A;
+
+</div>
+<br>
+Pros: intuitive syntax
+Cons: requires type info to discern references from pointer types
+<br>
+<div class="code">transmute(<span class="code_keyword">f32</span>) (transmute(<span class="code_keyword">u32</span>) f & (<span class="code_number">1</span> << <span class="code_number">31</span>))
+	
+transmute(<span class="code_keyword">f32</span>, transmute(<span class="code_keyword">u32</span>, f) & (<span class="code_number">1</span> << <span class="code_number">31</span>))
+	
+	
+*cast(&<span class="code_keyword">int</span>, targa_header.int_something[<span class="code_number">6</span>])
+</div>
+<br>
+stick with ^ and &
+<br>
+
+<br>
+
+<h1>Type System</h1>
+<h3>primitives</h3>
+- byte : a single byte with no extra information about what it represents
+- int : signed integer with unspecified size (used for general computation where the size is not important, i.e. the intention is normal arith, not modular arith)
+- i8,i16,i32,i64,i128 : signed integer with fixed size
+- uint : unsigned integer with unspecified size
+- u8,u16,u32,u64,u128 : unsigned integer with fixed size
+- float : IEEE 754 floating point with unspecified size
+- f16,f32,f64 : IEEE 754 float with specified size
+- string : length based string (fat pointer)
+- bool : boolean value with unspecified size
+- b8,b16,b32,b64,b128: boolean value with specified size
+<br>
+<h3>base</h3>
+- type info
+- any (byte pointer, type info)
+<br>
+<h3>Composite</h3>
+- pointer
+- array
+- slice
+- struct, union
+- enum
+- proc
+<br>
+Types are "first class", every type has an ID, most types have a "type info"
+<br>
+It would be nice to be able to serialize a struct and attach the typeid, then deserialize it by using the typeid and type info, but that would require quite stable typeids, it would be really nice if typeids were UUIDS, since typeids could then cross dll boundaries and be serialized, however, that would at least cause some overhead when looking up type information and would be of limited value without the type info
+<br>
+
+remove typeid, types can only be compared with == when they are constant, typeinfos can be compared with a "deep compare" or == (may be 'unsafe')
+<br>
+All types have a type info struct, types function as normal until they are bound the a non constant value, then they are cast to a type info pointer.
+<br>
+
+&a.b => &(a.b)
+&a.{as}
+<br>
+<div class="code">u<span class="code_keyword">int</span>, <span class="code_keyword">struct</span> {}
+
+typeid ==
+&type_info == + info
+
+<span class="code_comment">// passing type to proc</span>
+Make :: <span class="code_keyword">proc</span>($T) -> &T
+{
+    return <span class="code_number">0</span>;
+}
+
+<span class="code_comment">// sizeof</span>
+sizeof(<span class="code_keyword">uint</span>)
+
+a := <span class="code_number">0</span>;
+b : typeof(a) = <span class="code_number">0</span>;
+
+sizeof(typeof(a))
+
+typeof returns a type, which is converted to a &type_info when losing constant status
+
+&typeof(a).(b)
+&T.(a)
+</div>
+<br>
+type specialization as in Odin
+<br>
+
+type <=> type_info
+a: type; // illegal
+<br>
+
+A :: &type.(0);
+<br>
+a: A;
+<br>
+// creating a variable of type type is illegal
+// dereferencing the type is illegal
+// cast to &type is illegal
+<br>
+<div class="code">Make :: <span class="code_keyword">proc</span>($T: type = <span class="code_keyword">uint</span>) -> &T
+{
+	type_info_of(T)
+}
+</div>
+<br>
+
+problems with Odin's approach
+- mostly useless typeid, type_info has a superset of the functionality
+- typeids cannot cross dll boundary
+- typeids cannot be stored on disk
+<br>
+storing typeids on disk is  probably a mistake
+typeids crossing dll boundaries is useful
+comparing typeids with == makes that error prone
+comparing typeids with a function that uses == when both typeids are from the same program, and some other comparison if they are not, is probably safer
+<br>
+solution 1: ditch typeid, use &type_info. Disallow creating type_infos and casting to type_info (at least in a constant context)
+problems: weird,
+<br>
+uint, struct {}
+<br>
+a: type;
+<br>
+
+<br>
+<div class="code">Make :: <span class="code_keyword">proc</span>($T: typeid/[]$E) -> &T
+{
+}
+</div>
+<br>
+
+<br>
+cross dll boundary (network?)
+type id + information accessible at runtime
+<br>
+problems with Odin's approach
+</div>
+</body>
+</html>
