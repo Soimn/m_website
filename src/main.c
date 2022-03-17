@@ -124,6 +124,7 @@ GenerateFile(String contents, String filename, FILE* out)
     umm line       = 1;
     
     String title = filename;
+    String date  = STRING("yyyy.mm.dd");
     
     umm i = 0;
     if (contents.size != 0 && contents.data[0] == '$')
@@ -186,6 +187,21 @@ GenerateFile(String contents, String filename, FILE* out)
                         }
                     }
                 }
+                else if (String_Match(argument, STRING("date")))
+                {
+                    if (i == contents.size || contents.data[i] != ':')
+                    {
+                        //// ERROR:
+                        fprintf(stderr, "ERROR(%llu:%llu): Missing colon after 'date' config argument\n", line, i - line_start);
+                        encountered_errors = true;
+                    }
+                    else
+                    {
+                        i += 1;
+                        
+                        NOT_IMPLEMENTED;
+                    }
+                }
                 else
                 {
                     //// ERROR:
@@ -208,7 +224,23 @@ GenerateFile(String contents, String filename, FILE* out)
     fprintf(out, "<title>%.*s</title>\n", (int)title.size, title.data);
     fprintf(out, "<link rel=\"stylesheet\" href=\"main.css\">\n");
     fprintf(out, "</head>\n<body>\n");
-    fprintf(out, "<div class=\"content\">\n");
+    fprintf(out, "<div id=\"navbar\">\n");
+    fprintf(out, "<a id=\"logo\" href=\"/\">"
+            "<svg width=\"9.2622mm\" height=\"9.2616mm\" version=\"1.1\" viewBox=\"0 0 9.2622 9.2616\" xmlns=\"http://www.w3.org/2000/svg\">"
+            " <g transform=\"translate(58.868 -264.01)\">"
+            "  <path transform=\"scale(.26458)\" d=\"m-221.53 998.06c-0.4155 0-0.75 0.33452-0.75 0.75v33.07c0 0.4155 0.33451 0.75 0.75 0.75h33.072c0.4155 0 0.75-0.3345 0.75-0.75v-33.07c0-0.41552-0.33451-0.75-0.75-0.75zm0.17968 3.7402h13.076v0.7227c-1.224 0.1171-2.0182 0.3253-2.3828 0.625-0.36458 0.2994-0.54687 0.6836-0.54687 1.1523 0 0.6511 0.29948 1.6667 0.89844 3.0469l6.7383 15.527 6.25-15.332c0.61197-1.5104 0.91797-2.5586 0.91797-3.1445 0-0.3776-0.1888-0.7356-0.56641-1.0742-0.3776-0.3516-1.0156-0.599-1.9141-0.7422-0.0651-0.013-0.17579-0.032-0.33203-0.059h-0.77149v-0.7227h11.346v0.7227h-0.95703c-1.0807 0-1.8685 0.319-2.3633 0.957-0.32551 0.4166-0.48633 1.4193-0.48633 3.0078v17.109c0 1.3411 0.0846 2.2266 0.25391 2.6563 0.13022 0.3254 0.4017 0.6055 0.81836 0.8398 0.55989 0.3126 1.1524 0.4687 1.7773 0.4687h0.95703v0.7227h-11.346v-0.7227h0.9375c1.0938 0 1.888-0.319 2.3828-0.957 0.31251-0.4166 0.46875-1.4193 0.46875-3.0078v-14.363l-8.0566 19.656h-0.72265l-8.8379-20.338v15.045c0 1.3411 0.0846 2.2266 0.2539 2.6563 0.13022 0.3254 0.40367 0.6055 0.82031 0.8398 0.55991 0.3126 1.1524 0.4687 1.7774 0.4687h0.95703v0.7227h-11.348v-0.7227h0.9375c1.0938 0 1.888-0.319 2.3828-0.957 0.3125-0.4166 0.46875-1.4193 0.46875-3.0078v-17.109c0-1.3411-0.0846-2.2265-0.25391-2.6562-0.13022-0.3255-0.39715-0.6055-0.80078-0.8399-0.57292-0.3126-1.1719-0.4687-1.7969-0.4687h-0.9375z\" stroke-width=\".43432\"/>"
+            " </g>"
+            "</svg></a>"
+            );
+    fprintf(out, "\n<ul>\n"
+            "<li><a href=\"#\">devlogs</a></li>\n"
+            "<li class=\"navbar_li_divider\">|</li>\n"
+            "<li><a href=\"#\">docs</a></li>\n"
+            "<li class=\"navbar_li_divider\">|</li>\n"
+            "<li><a href=\"https://github.com/Soimn/mm\">GitHub</a></li></ul>\n");
+    fprintf(out, "</div>\n");
+    fprintf(out, "<div id=\"content\">\n");
+    fprintf(out, "<h1 id=\"title\">%.*s</h1>\n<p id=\"date\">%.*s</p>", (int)title.size, title.data, (int)date.size, date.data);
     
     umm heading_level = 0;
     umm decor_level   = 0;
@@ -270,7 +302,7 @@ GenerateFile(String contents, String filename, FILE* out)
             }
             else
             {
-                heading_level = j - i;
+                heading_level = j - i + 1;
                 i = j + 1;
                 
                 fprintf(out, "<h%llu>", heading_level);
@@ -320,7 +352,7 @@ GenerateFile(String contents, String filename, FILE* out)
             fprintf(out, "<div class=\"code\">");
             
             while (i < contents.size && contents.data[i] != '\n') i += 1;
-			if (i < contents.size && contents.data[i] == '\n') i += 1;
+            if (i < contents.size && contents.data[i] == '\n') i += 1;
             
             if (i != contents.size)
             {
@@ -364,6 +396,16 @@ GenerateFile(String contents, String filename, FILE* out)
                         STRING("f32"),
                         STRING("f64"),
                         STRING("float"),
+                        STRING("using"),
+                        STRING("defer"),
+                        STRING("return"),
+                        STRING("include"),
+                        STRING("as"),
+                        STRING("import"),
+                        STRING("break"),
+                        STRING("continue"),
+                        STRING("when"),
+                        STRING("else"),
                     };
                     
                     String identifier = { .data = contents.data + i, .size = 0 };
@@ -385,9 +427,16 @@ GenerateFile(String contents, String filename, FILE* out)
                         }
                     }
                     
-                    if (k != ARRAY_SIZE(keywords)) fprintf(out, "<span class=\"code_keyword\">");
-                    fprintf(out, "%.*s", (int)identifier.size, identifier.data);
-                    if (k != ARRAY_SIZE(keywords)) fprintf(out, "</span>");
+                    if (String_Match(identifier, STRING("true")) || String_Match(identifier, STRING("false")))
+                    {
+                        fprintf(out, "<span class=\"code_bool\">%.*s</span>", (int)identifier.size, identifier.data);
+                    }
+                    else
+                    {
+                        if (k != ARRAY_SIZE(keywords)) fprintf(out, "<span class=\"code_keyword\">");
+                        fprintf(out, "%.*s", (int)identifier.size, identifier.data);
+                        if (k != ARRAY_SIZE(keywords)) fprintf(out, "</span>");
+                    }
                 }
                 else if (contents.data[i] >= '0' && contents.data[i] <= '9')
                 {
@@ -424,7 +473,33 @@ GenerateFile(String contents, String filename, FILE* out)
                 }
                 else if (i + 1 < contents.size && contents.data[i] == '/' && contents.data[i + 1] == '/')
                 {
-                    fprintf(out, "<span class=\"code_comment\">");
+                    char* code_class = "code_comment";
+                    if (i + 3 < contents.size && contents.data[i + 2] == '/' && contents.data[i + 3] == ' ')
+                    {
+                        code_class = "code_hi_comment";
+                    }
+                    else if (i + 4 < contents.size && contents.data[i + 2] == '/' && contents.data[i + 3] == '/' && 
+                             contents.data[i + 4] == ' ')
+                    {
+                        code_class = "code_err_comment";
+                    }
+                    
+                    fprintf(out, "<span class=\"%s\">", code_class);
+                    while (i < contents.size && contents.data[i] == '/') fputc(contents.data[i++], out);
+                    
+                    if (i + sizeof("TODO") < contents.size && contents.data[i] == ' ' &&
+                        String_Match((String){ .data = contents.data + i + 1, .size = sizeof("TODO") - 1}, STRING("TODO")))
+                    {
+                        fprintf(out, "<span class=\"code_todo\">TODO</span>");
+                        i += sizeof("TODO");
+                    }
+                    else if (i + sizeof("NOTE") < contents.size && contents.data[i] == ' ' &&
+                             String_Match((String){ .data = contents.data + i + 1, .size = sizeof("NOTE") - 1}, STRING("NOTE")))
+                    {
+                        fprintf(out, "<span class=\"code_note\">NOTE</span>");
+                        i += sizeof("NOTE");
+                    }
+                    
                     while (i < contents.size && contents.data[i] != '\n') fputc(contents.data[i++], out);
                     fprintf(out, "</span>");
                 }
@@ -552,7 +627,7 @@ GenerateFile(String contents, String filename, FILE* out)
     
     if (!encountered_errors)
     {
-        fprintf(out, "</div>\n</body>\n</html>");
+        fprintf(out, "</div>\n<div id=\"footer\"></div>\n</body>\n</html>");
     }
     
     return !encountered_errors;
@@ -632,7 +707,16 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer)
                             }
                         }
                         
-                        if (extension == 0 || strcmp(extension, ".md") != 0) printf("Skipping %.*s\n", (int)path.size, path.data);
+                        if (extension == 0 || strcmp(extension, ".md") != 0)
+                        {
+                            if (!CopyFile((LPCSTR)path.data, (LPCSTR)(path.data + prefix_len + 1), true))
+                            {
+                                //// ERROR: 
+                                fprintf(stderr, "Failed to copy file to %.*s\n",
+                                        (int)(path.size - (prefix_len + 1)), path.data + prefix_len + 1);
+                                encountered_errors = true;
+                            }
+                        }
                         else
                         {
                             if ((u8*)extension - path.data + sizeof(".html") > path.capacity)
@@ -777,7 +861,6 @@ main()
         else
         {
             GenerateAllFiles(pages_path.size - 1, path, file_buffer);
-            CopyFile("..\\src\\main.css", ".\\main.css", 0);
         }
     }
 }

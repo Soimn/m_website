@@ -5,9 +5,19 @@
 <link rel="stylesheet" href="main.css">
 </head>
 <body>
-<div class="content">
-Goal:
-A no bullshit systems programming language that improves upon C while still feeling low level
+<div id="navbar">
+<a id="logo" href="/"><svg width="9.2622mm" height="9.2616mm" version="1.1" viewBox="0 0 9.2622 9.2616" xmlns="http://www.w3.org/2000/svg"> <g transform="translate(58.868 -264.01)">  <path transform="scale(.26458)" d="m-221.53 998.06c-0.4155 0-0.75 0.33452-0.75 0.75v33.07c0 0.4155 0.33451 0.75 0.75 0.75h33.072c0.4155 0 0.75-0.3345 0.75-0.75v-33.07c0-0.41552-0.33451-0.75-0.75-0.75zm0.17968 3.7402h13.076v0.7227c-1.224 0.1171-2.0182 0.3253-2.3828 0.625-0.36458 0.2994-0.54687 0.6836-0.54687 1.1523 0 0.6511 0.29948 1.6667 0.89844 3.0469l6.7383 15.527 6.25-15.332c0.61197-1.5104 0.91797-2.5586 0.91797-3.1445 0-0.3776-0.1888-0.7356-0.56641-1.0742-0.3776-0.3516-1.0156-0.599-1.9141-0.7422-0.0651-0.013-0.17579-0.032-0.33203-0.059h-0.77149v-0.7227h11.346v0.7227h-0.95703c-1.0807 0-1.8685 0.319-2.3633 0.957-0.32551 0.4166-0.48633 1.4193-0.48633 3.0078v17.109c0 1.3411 0.0846 2.2266 0.25391 2.6563 0.13022 0.3254 0.4017 0.6055 0.81836 0.8398 0.55989 0.3126 1.1524 0.4687 1.7773 0.4687h0.95703v0.7227h-11.346v-0.7227h0.9375c1.0938 0 1.888-0.319 2.3828-0.957 0.31251-0.4166 0.46875-1.4193 0.46875-3.0078v-14.363l-8.0566 19.656h-0.72265l-8.8379-20.338v15.045c0 1.3411 0.0846 2.2266 0.2539 2.6563 0.13022 0.3254 0.40367 0.6055 0.82031 0.8398 0.55991 0.3126 1.1524 0.4687 1.7774 0.4687h0.95703v0.7227h-11.348v-0.7227h0.9375c1.0938 0 1.888-0.319 2.3828-0.957 0.3125-0.4166 0.46875-1.4193 0.46875-3.0078v-17.109c0-1.3411-0.0846-2.2265-0.25391-2.6562-0.13022-0.3255-0.39715-0.6055-0.80078-0.8399-0.57292-0.3126-1.1719-0.4687-1.7969-0.4687h-0.9375z" stroke-width=".43432"/> </g></svg></a>
+<ul>
+<li><a href="#">devlogs</a></li>
+<li class="navbar_li_divider">|</li>
+<li><a href="#">docs</a></li>
+<li class="navbar_li_divider">|</li>
+<li><a href="https://github.com/Soimn/mm">GitHub</a></li></ul>
+</div>
+<div id="content">
+<h1 id="title">Hello</h1>
+<p id="date">yyyy.mm.dd</p>Goal:
+<a href="https://www.google.com">A no bullshit systems programming</a> language that improves upon C while still feeling low level
 <br>
 structured programming (if, while, scopes)
 no hidden complexity
@@ -21,7 +31,7 @@ made for x64
 </div>
 <br>
 ? overflow, bounds checking, implicit casting
-<div class="code">ident, <span class="code_number">0</span>, "", '', true, <span class="code_keyword">proc</span>, <span class="code_keyword">struct</span>, <span class="code_keyword">union</span>, <span class="code_keyword">enum</span>, .[], .{}, .(), .b, (expr)
+<div class="code">ident, <span class="code_number">0</span>, "", '', <span class="code_bool">true</span>, <span class="code_keyword">proc</span>, <span class="code_keyword">struct</span>, <span class="code_keyword">union</span>, <span class="code_keyword">enum</span>, .[], .{}, .(), .b, (expr)
 (), [N], [N:N], a.b, ^
 [], [N], ^
 a.[], a.{}, a.()
@@ -29,6 +39,10 @@ a.[], a.{}, a.()
 .., ..<
 *, /, %, &, >>, >>>, <<, <<<
 +, -, |, ~
+<span class="code_comment">//<span class="code_todo">TODO</span>: Moare</span>
+<span class="code_err_comment">//// ERROR</span>
+<span class="code_hi_comment">/// HI</span>
+<span class="code_hi_comment">///<span class="code_todo">TODO</span>: HI</span>
 ==, !=, <, >, <=, >=
 &&
 ||
@@ -58,21 +72,21 @@ maybe
 </div>
 <br>
 <div class="code">:label <span class="code_keyword">if</span> (init; condition) statement
-when (init; condition) statement
-else statement
+<span class="code_keyword">when</span> (init; condition) statement
+<span class="code_keyword">else</span> statement
 :label <span class="code_keyword">while</span> (init; condition; step) statement
 :label { block }
-defer statement
-return .a = <span class="code_number">0</span>, .b = <span class="code_number">1</span>
-using expr as alias
-break label
-continue label
+<span class="code_keyword">defer</span> statement
+<span class="code_keyword">return</span> .a = <span class="code_number">0</span>, .b = <span class="code_number">1</span>
+<span class="code_keyword">using</span> expr <span class="code_keyword">as</span> alias
+<span class="code_keyword">break</span> label
+<span class="code_keyword">continue</span> label
 a ?= b
 </div>
 <br>
 <div class="code">a, b, c: a = a, b, c; <span class="code_comment">// ---</span>
 a, b, c :: a, b, c;
-include "file" as alias
+<span class="code_keyword">include</span> "file" <span class="code_keyword">as</span> alias
 </div>
 <br>
 
@@ -103,7 +117,7 @@ print(p.x, p.y, p.z);
 
 Pos :: <span class="code_keyword">struct</span>
 {
-	using cold: ^Pos_Cold;
+	<span class="code_keyword">using</span> cold: ^Pos_Cold;
 	z: <span class="code_keyword">int</span>;
 };
 
@@ -168,8 +182,8 @@ stick with ^ and &
 
 <br>
 
-<h1>Type System</h1>
-<h3>primitives</h3>
+<h2>Type System</h2>
+<h4>primitives</h4>
 - byte : a single byte with no extra information about what it represents
 - int : signed integer with unspecified size (used for general computation where the size is not important, i.e. the intention is normal arith, not modular arith)
 - i8,i16,i32,i64,i128 : signed integer with fixed size
@@ -181,11 +195,11 @@ stick with ^ and &
 - bool : boolean value with unspecified size
 - b8,b16,b32,b64,b128: boolean value with specified size
 <br>
-<h3>base</h3>
+<h4>base</h4>
 - type info
 - any (byte pointer, type info)
 <br>
-<h3>Composite</h3>
+<h4>Composite</h4>
 - pointer
 - array
 - slice
@@ -214,7 +228,7 @@ typeid ==
 <span class="code_comment">// passing type to proc</span>
 Make :: <span class="code_keyword">proc</span>($T) -> &T
 {
-    return <span class="code_number">0</span>;
+    <span class="code_keyword">return</span> <span class="code_number">0</span>;
 }
 
 <span class="code_comment">// sizeof</span>
@@ -225,7 +239,7 @@ b : typeof(a) = <span class="code_number">0</span>;
 
 sizeof(typeof(a))
 
-typeof returns a type, which is converted to a &type_info when losing constant status
+typeof returns a type, which is converted to a &type_info <span class="code_keyword">when</span> losing constant status
 
 &typeof(a).(b)
 &T.(a)
@@ -284,5 +298,6 @@ type id + information accessible at runtime
 <br>
 problems with Odin's approach
 </div>
+<div id="footer"></div>
 </body>
 </html>

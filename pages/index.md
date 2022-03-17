@@ -1,5 +1,5 @@
 $title: Hello$Goal:
-A no bullshit systems programming language that improves upon C while still feeling low level
+[A no bullshit systems programming](https://www.google.com) language that improves upon C while still feeling low level
 
 structured programming (if, while, scopes)
 no hidden complexity
@@ -23,6 +23,10 @@ a.[], a.{}, a.()
 .., ..<
 *, /, %, &, >>, >>>, <<, <<<
 +, -, |, ~
+// TODO: Moare
+//// ERROR
+/// HI
+/// TODO: HI
 ==, !=, <, >, <=, >=
 &&
 ||
