@@ -1,5 +1,6 @@
 :root {
-	--logo-color: #e87007;
+	/*--logo-color: #e87007;*/
+	--logo-color: #DD571C;
 	--text-color: #191919;
 	--max-content-width: 50em;
 }
@@ -22,8 +23,8 @@ body {
 #navbar ul {
 	width: calc(var(--max-content-width)*(15/50));
 	padding: 0;
-	margin: 1em 0;
-	font-size: 18px;
+	margin: 0.75em 0.25em;
+	font-size: 1.5em;
 	display: flex;
 	list-style: none;
 	justify-content: space-between;

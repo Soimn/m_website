@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #define NOMINMAX            1
 #define WIN32_LEAN_AND_MEAN 1
 #define WIN32_MEAN_AND_LEAN 1
@@ -115,8 +117,47 @@ String_Match(String s0, String s1)
     return result;
 }
 
+void
+GeneratePreamble(FILE* out, String title, umm depth)
+{
+    fprintf(out, "<!doctype html>\n<html>\n<head>\n");
+    fprintf(out, "<title>%.*s</title>\n", (int)title.size, title.data);
+    fprintf(out, "<link rel=\"stylesheet\" href=\"");
+    for (umm j = 0; j < depth; ++j) fprintf(out, "../");
+    fprintf(out, "main.css\">\n</head>\n<body>\n");
+    fprintf(out, "<div id=\"content\">\n");
+    fprintf(out, "<div id=\"navbar\">\n");
+    fprintf(out, "<a id=\"logo\" href=\"");
+    for (umm j = 0; j < depth; ++j) fprintf(out, "../");
+    fprintf(out, "index.html\">\n");
+    fprintf(out, "<svg width=\"9.2622mm\" height=\"9.2616mm\" version=\"1.1\" viewBox=\"0 0 9.2622 9.2616\" xmlns=\"http://www.w3.org/2000/svg\">"
+            " <g transform=\"translate(58.868 -264.01)\">"
+            "  <path transform=\"scale(.26458)\" d=\"m-221.53 998.06c-0.4155 0-0.75 0.33452-0.75 0.75v33.07c0 0.4155 0.33451 0.75 0.75 0.75h33.072c0.4155 0 0.75-0.3345 0.75-0.75v-33.07c0-0.41552-0.33451-0.75-0.75-0.75zm0.17968 3.7402h13.076v0.7227c-1.224 0.1171-2.0182 0.3253-2.3828 0.625-0.36458 0.2994-0.54687 0.6836-0.54687 1.1523 0 0.6511 0.29948 1.6667 0.89844 3.0469l6.7383 15.527 6.25-15.332c0.61197-1.5104 0.91797-2.5586 0.91797-3.1445 0-0.3776-0.1888-0.7356-0.56641-1.0742-0.3776-0.3516-1.0156-0.599-1.9141-0.7422-0.0651-0.013-0.17579-0.032-0.33203-0.059h-0.77149v-0.7227h11.346v0.7227h-0.95703c-1.0807 0-1.8685 0.319-2.3633 0.957-0.32551 0.4166-0.48633 1.4193-0.48633 3.0078v17.109c0 1.3411 0.0846 2.2266 0.25391 2.6563 0.13022 0.3254 0.4017 0.6055 0.81836 0.8398 0.55989 0.3126 1.1524 0.4687 1.7773 0.4687h0.95703v0.7227h-11.346v-0.7227h0.9375c1.0938 0 1.888-0.319 2.3828-0.957 0.31251-0.4166 0.46875-1.4193 0.46875-3.0078v-14.363l-8.0566 19.656h-0.72265l-8.8379-20.338v15.045c0 1.3411 0.0846 2.2266 0.2539 2.6563 0.13022 0.3254 0.40367 0.6055 0.82031 0.8398 0.55991 0.3126 1.1524 0.4687 1.7774 0.4687h0.95703v0.7227h-11.348v-0.7227h0.9375c1.0938 0 1.888-0.319 2.3828-0.957 0.3125-0.4166 0.46875-1.4193 0.46875-3.0078v-17.109c0-1.3411-0.0846-2.2265-0.25391-2.6562-0.13022-0.3255-0.39715-0.6055-0.80078-0.8399-0.57292-0.3126-1.1719-0.4687-1.7969-0.4687h-0.9375z\" stroke-width=\".43432\"/>"
+            " </g>"
+            "</svg></a>"
+            );
+    fprintf(out, "\n<ul>\n"
+            "<li><a href=\"");
+    for (umm j = 0; j < depth; ++j) fprintf(out, "../");
+    fprintf(out, "log_index.html\">devlogs</a></li>\n"
+            "<li class=\"navbar_li_divider\">|</li>\n"
+            "<li><a href=\"");
+    for (umm j = 0; j < depth; ++j) fprintf(out, "../");
+    fprintf(out, "doc_index.html\">docs</a></li>\n"
+            "<li class=\"navbar_li_divider\">|</li>\n"
+            "<li><a href=\"https://github.com/Soimn/mm\">GitHub</a></li></ul>\n");
+    fprintf(out, "</div>\n");
+}
+
+void
+GeneratePostamble(FILE* out)
+{
+    fprintf(out, "</div>\n<div id=\"footer\"></div>\n</body>\n</html>");
+}
+
+FILE* LogIndex = 0;
 bool
-GenerateFile(String contents, String filename, FILE* out)
+GenerateFile(String contents, String filename, FILE* out, umm depth, bool is_devlog)
 {
     bool encountered_errors = false;
     
@@ -124,7 +165,7 @@ GenerateFile(String contents, String filename, FILE* out)
     umm line       = 1;
     
     String title = filename;
-    String date  = STRING("yyyy.mm.dd");
+    String date  = STRING("");
     
     umm i = 0;
     if (contents.size != 0 && contents.data[0] == '$')
@@ -141,6 +182,9 @@ GenerateFile(String contents, String filename, FILE* out)
             }
             else
             {
+                while (i < contents.size && (contents.data[i] == ' '  || contents.data[i] == '\t' ||
+                                             contents.data[i] == '\r' || contents.data[i] == '\n')) i += 1;
+                
                 String argument = { .data = contents.data + i, .size = 0 };
                 while (i < contents.size && (contents.data[i] >= 'a' && contents.data[i] <= 'z' ||
                                              contents.data[i] >= 'A' && contents.data[i] <= 'Z' ||
@@ -166,10 +210,7 @@ GenerateFile(String contents, String filename, FILE* out)
                         while (i < contents.size && (contents.data[i] == ' ' || contents.data[i] == '\t')) i += 1;
                         
                         String value = { .data = contents.data + i, .size = 0 };
-                        while (i < contents.size && (contents.data[i] >= 'a' && contents.data[i] <= 'z' ||
-                                                     contents.data[i] >= 'A' && contents.data[i] <= 'Z' ||
-                                                     contents.data[i] >= '0' && contents.data[i] <= '9' ||
-                                                     contents.data[i] == '_'))
+                        while (i < contents.size && contents.data[i] != '\r' && contents.data[i] != '\n')
                         {
                             ++i;
                             ++value.size;
@@ -199,19 +240,46 @@ GenerateFile(String contents, String filename, FILE* out)
                     {
                         i += 1;
                         
-                        NOT_IMPLEMENTED;
+                        while (i < contents.size && (contents.data[i] == ' ' || contents.data[i] == '\t')) i += 1;
+                        
+                        if (i + sizeof("yyyy.mm.dd") - 1 > contents.size)
+                        {
+                            //// ERROR:
+                            fprintf(stderr, "ERROR(%llu:%llu): Missing iso date after 'date' argument\n", line, i - line_start);
+                            encountered_errors = true;
+                        }
+                        else if (contents.data[i + 0] < '0' && contents.data[i + 0] > '9' ||
+                                 contents.data[i + 1] < '0' && contents.data[i + 1] > '9' ||
+                                 contents.data[i + 2] < '0' && contents.data[i + 2] > '9' ||
+                                 contents.data[i + 3] < '0' && contents.data[i + 3] > '9' ||
+                                 contents.data[i + 4] != '.'                              ||
+                                 contents.data[i + 5] < '0' && contents.data[i + 5] > '9' ||
+                                 contents.data[i + 6] < '0' && contents.data[i + 6] > '9' ||
+                                 contents.data[i + 7] != '.'                              ||
+                                 contents.data[i + 8] < '0' && contents.data[i + 8] > '9' ||
+                                 contents.data[i + 9] < '0' && contents.data[i + 9] > '9')
+                        {
+                            //// ERROR:
+                            fprintf(stderr, "ERROR(%llu:%llu): Invalid iso date\n", line, i - line_start);
+                            encountered_errors = true;
+                        }
+                        else
+                        {
+                            date = (String){ .data = contents.data + i, .size = sizeof("yyyy.mm.dd") - 1 };
+                            i += sizeof("yyyy.mm.dd") - 1;
+                        }
                     }
                 }
                 else
                 {
                     //// ERROR:
-                    fprintf(stderr, "ERROR(%llu:%llu): Unknown config argument\n", line, i - line_start);
+                    fprintf(stderr, "ERROR(%llu:%llu): Unknown config argument\n %s", line, i - line_start, contents.data + i);
                     encountered_errors = true;
                 }
             }
         }
         
-        if (i == contents.size || contents.data[i] != '$')
+        if (!encountered_errors && (i == contents.size || contents.data[i] != '$'))
         {
             //// ERROR:
             fprintf(stderr, "ERROR(%llu:%llu): Missing $ after configuration\n", line, i - line_start);
@@ -220,27 +288,15 @@ GenerateFile(String contents, String filename, FILE* out)
         else i += 1;
     }
     
-    fprintf(out, "<!doctype html>\n<html>\n<head>\n");
-    fprintf(out, "<title>%.*s</title>\n", (int)title.size, title.data);
-    fprintf(out, "<link rel=\"stylesheet\" href=\"main.css\">\n");
-    fprintf(out, "</head>\n<body>\n");
-    fprintf(out, "<div id=\"navbar\">\n");
-    fprintf(out, "<a id=\"logo\" href=\"/\">"
-            "<svg width=\"9.2622mm\" height=\"9.2616mm\" version=\"1.1\" viewBox=\"0 0 9.2622 9.2616\" xmlns=\"http://www.w3.org/2000/svg\">"
-            " <g transform=\"translate(58.868 -264.01)\">"
-            "  <path transform=\"scale(.26458)\" d=\"m-221.53 998.06c-0.4155 0-0.75 0.33452-0.75 0.75v33.07c0 0.4155 0.33451 0.75 0.75 0.75h33.072c0.4155 0 0.75-0.3345 0.75-0.75v-33.07c0-0.41552-0.33451-0.75-0.75-0.75zm0.17968 3.7402h13.076v0.7227c-1.224 0.1171-2.0182 0.3253-2.3828 0.625-0.36458 0.2994-0.54687 0.6836-0.54687 1.1523 0 0.6511 0.29948 1.6667 0.89844 3.0469l6.7383 15.527 6.25-15.332c0.61197-1.5104 0.91797-2.5586 0.91797-3.1445 0-0.3776-0.1888-0.7356-0.56641-1.0742-0.3776-0.3516-1.0156-0.599-1.9141-0.7422-0.0651-0.013-0.17579-0.032-0.33203-0.059h-0.77149v-0.7227h11.346v0.7227h-0.95703c-1.0807 0-1.8685 0.319-2.3633 0.957-0.32551 0.4166-0.48633 1.4193-0.48633 3.0078v17.109c0 1.3411 0.0846 2.2266 0.25391 2.6563 0.13022 0.3254 0.4017 0.6055 0.81836 0.8398 0.55989 0.3126 1.1524 0.4687 1.7773 0.4687h0.95703v0.7227h-11.346v-0.7227h0.9375c1.0938 0 1.888-0.319 2.3828-0.957 0.31251-0.4166 0.46875-1.4193 0.46875-3.0078v-14.363l-8.0566 19.656h-0.72265l-8.8379-20.338v15.045c0 1.3411 0.0846 2.2266 0.2539 2.6563 0.13022 0.3254 0.40367 0.6055 0.82031 0.8398 0.55991 0.3126 1.1524 0.4687 1.7774 0.4687h0.95703v0.7227h-11.348v-0.7227h0.9375c1.0938 0 1.888-0.319 2.3828-0.957 0.3125-0.4166 0.46875-1.4193 0.46875-3.0078v-17.109c0-1.3411-0.0846-2.2265-0.25391-2.6562-0.13022-0.3255-0.39715-0.6055-0.80078-0.8399-0.57292-0.3126-1.1719-0.4687-1.7969-0.4687h-0.9375z\" stroke-width=\".43432\"/>"
-            " </g>"
-            "</svg></a>"
-            );
-    fprintf(out, "\n<ul>\n"
-            "<li><a href=\"#\">devlogs</a></li>\n"
-            "<li class=\"navbar_li_divider\">|</li>\n"
-            "<li><a href=\"#\">docs</a></li>\n"
-            "<li class=\"navbar_li_divider\">|</li>\n"
-            "<li><a href=\"https://github.com/Soimn/mm\">GitHub</a></li></ul>\n");
-    fprintf(out, "</div>\n");
-    fprintf(out, "<div id=\"content\">\n");
-    fprintf(out, "<h1 id=\"title\">%.*s</h1>\n<p id=\"date\">%.*s</p>", (int)title.size, title.data, (int)date.size, date.data);
+    GeneratePreamble(out, title, depth);
+    
+    if (is_devlog)
+    {
+        fprintf(LogIndex, "<div class=\"devlog\"><div class=\"devlog_filename\">%.*s</div><div class=\"devlog_title\">%.*s</div></div>", (int)filename.size, filename.data, (int)title.size, title.data);
+    }
+    
+    fprintf(out, "<h1 id=\"title\">%.*s</h1>", (int)title.size, title.data);
+    if (date.size != 0) fprintf(out, "\n<p id=\"date\">%.*s</p>",  (int)date.size, date.data);
     
     umm heading_level = 0;
     umm decor_level   = 0;
@@ -625,16 +681,13 @@ GenerateFile(String contents, String filename, FILE* out)
         }
     }
     
-    if (!encountered_errors)
-    {
-        fprintf(out, "</div>\n<div id=\"footer\"></div>\n</body>\n</html>");
-    }
+    GeneratePostamble(out);
     
     return !encountered_errors;
 }
 
 bool
-GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer)
+GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer, umm depth)
 {
     bool encountered_errors = false;
     
@@ -691,7 +744,7 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer)
                                         (int)(path.size - (prefix_len + 1)), path.data + prefix_len + 1);
                                 encountered_errors = true;
                             }
-                            else if (!GenerateAllFiles(prefix_len, path, file_buffer)) encountered_errors = true;
+                            else if (!GenerateAllFiles(prefix_len, path, file_buffer, depth + 1)) encountered_errors = true;
                         }
                     }
                     else if (find_data.dwFileAttributes == FILE_ATTRIBUTE_NORMAL ||
@@ -777,7 +830,10 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer)
                                             .size = filename_len - sizeof(".html")
                                         };
                                         
-                                        if (!GenerateFile((String){ .data = file_buffer.data, .size = bytes_read}, filename_wo_ext, gen_file))
+                                        bool is_in_devlogs = String_Match((String){ .data = path.data, .size = path.size - filename_len },
+                                                                          STRING("..\\pages\\devlogs\\"));
+                                        
+                                        if (!GenerateFile((String){ .data = file_buffer.data, .size = bytes_read}, filename_wo_ext, gen_file, depth, is_in_devlogs))
                                         {
                                             encountered_errors = true;
                                         }
@@ -840,6 +896,11 @@ main()
     if (!SetCurrentDirectory(wd_path) || !SetCurrentDirectory("..\\gen")) fprintf(stderr, "Failed to set current directory\n");
     else
     {
+        HANDLE change_handle = FindFirstChangeNotificationA("..\\pages", true, (FILE_NOTIFY_CHANGE_FILE_NAME  |
+                                                                                FILE_NOTIFY_CHANGE_DIR_NAME   |
+                                                                                FILE_NOTIFY_CHANGE_ATTRIBUTES |
+                                                                                FILE_NOTIFY_CHANGE_SIZE       |
+                                                                                FILE_NOTIFY_CHANGE_LAST_WRITE));
         system("rmdir . /s /q 2>nul");
         
         String pages_path = STRING("..\\pages\0");
@@ -860,7 +921,19 @@ main()
         if (file_buffer.data == 0) fprintf(stderr, "Failed to create file buffer\n");
         else
         {
-            GenerateAllFiles(pages_path.size - 1, path, file_buffer);
+            LogIndex = fopen("log_index.html", "w");
+            
+            if (LogIndex == 0) fprintf(stderr, "Failed open log index\n");
+            else
+            {
+                GeneratePreamble(LogIndex, STRING("Devlogs"), 0);
+                fprintf(LogIndex, "<h1>Devlogs</h1>");
+                
+                GenerateAllFiles(pages_path.size - 1, path, file_buffer, 0);
+                
+                GeneratePostamble(LogIndex);
+                fclose(LogIndex);
+            }
         }
     }
 }
