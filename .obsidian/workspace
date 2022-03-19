@@ -9,7 +9,7 @@
         "state": {
           "type": "markdown",
           "state": {
-            "file": "pages/index.md",
+            "file": "pages/devlogs/000.md",
             "mode": "source"
           }
         }
@@ -68,7 +68,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "pages/index.md",
+                "file": "pages/devlogs/000.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -88,7 +88,7 @@
   },
   "active": "919f132033da7ee5",
   "lastOpenFiles": [
-    "pages/index.md",
-    "pages/devlogs/000.md"
+    "pages/devlogs/000.md",
+    "pages/index.md"
   ]
 }
