@@ -292,7 +292,7 @@ GenerateFile(String contents, String filename, FILE* out, umm depth, bool is_dev
     
     if (is_devlog)
     {
-        fprintf(LogIndex, "<div class=\"devlog\"><div class=\"devlog_filename\">%.*s</div><div class=\"devlog_title\">%.*s</div></div>", (int)filename.size, filename.data, (int)title.size, title.data);
+        fprintf(LogIndex, "<a class=\"devlog_anchor\" href=\"devlogs/%.*s.html\"><div class=\"devlog\"><div class=\"devlog_filename\">%.*s</div><div class=\"devlog_title\">%.*s</div></div></a>", (int)filename.size, filename.data, (int)filename.size, filename.data, (int)title.size, title.data);
     }
     
     fprintf(out, "<h1 id=\"title\">%.*s</h1>", (int)title.size, title.data);
@@ -320,11 +320,11 @@ GenerateFile(String contents, String filename, FILE* out, umm depth, bool is_dev
         }
         else if (contents.data[i] == '\n')
         {
-            if (i + 1 < contents.size && contents.data[i + 1] == '\n' || 
-                i + 2 < contents.size && contents.data[i + 1] == '\r' && contents.data[i + 2] == '\n')
+            fprintf(out, "\n");
+            if (heading_level != 0) fprintf(out, "</h%llu>", heading_level), heading_level = 0;
+            
+            if (line_start == i || contents.data[line_start] == '\r' && line_start + 1 == i)
             {
-                if (contents.size && contents.data[i] != '\n') i += 1;
-                
                 if (decor_level != 0)
                 {
                     if ((open_decors & 1) != 0) fprintf(out, "</span>");
@@ -334,14 +334,10 @@ GenerateFile(String contents, String filename, FILE* out, umm depth, bool is_dev
                     open_decors = 0;
                 }
                 
-                fprintf(out, "\n<br>");
-                
-                i += 2;
+                fprintf(out, "<br>");
             }
             
-            if (heading_level != 0) fprintf(out, "</h%llu>", heading_level), heading_level = 0;
-            
-            fputc(contents.data[i++], out);
+            i += 1;
             line_start = i;
             line      += 1;
         }
@@ -827,7 +823,7 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer, umm d
                                     {
                                         String filename_wo_ext = {
                                             .data = path.data + (path.size - filename_len),
-                                            .size = filename_len - sizeof(".html")
+                                            .size = filename_len - (sizeof(".html") - 1)
                                         };
                                         
                                         bool is_in_devlogs = String_Match((String){ .data = path.data, .size = path.size - filename_len },
@@ -893,34 +889,34 @@ main()
     
     *filename = 0;
     
+    String file_buffer;
+    file_buffer.size = GB(2);
+    file_buffer.data = VirtualAlloc(0, file_buffer.size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    
     if (!SetCurrentDirectory(wd_path) || !SetCurrentDirectory("..\\gen")) fprintf(stderr, "Failed to set current directory\n");
+    else if (file_buffer.data == 0) fprintf(stderr, "Failed to create file buffer\n");
     else
     {
         HANDLE change_handle = FindFirstChangeNotificationA("..\\pages", true, (FILE_NOTIFY_CHANGE_FILE_NAME  |
                                                                                 FILE_NOTIFY_CHANGE_DIR_NAME   |
-                                                                                FILE_NOTIFY_CHANGE_ATTRIBUTES |
-                                                                                FILE_NOTIFY_CHANGE_SIZE       |
                                                                                 FILE_NOTIFY_CHANGE_LAST_WRITE));
-        system("rmdir . /s /q 2>nul");
-        
-        String pages_path = STRING("..\\pages\0");
-        
-        char buffer[MAX_PATH * 4];
-        memcpy(buffer, pages_path.data, pages_path.size);
-        
-        Growable_String path = {
-            .data     = (u8*)buffer,
-            .size     = pages_path.size - 1,
-            .capacity = ARRAY_SIZE(buffer),
-        };
-        
-        String file_buffer;
-        file_buffer.size = GB(2);
-        file_buffer.data = VirtualAlloc(0, file_buffer.size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-        
-        if (file_buffer.data == 0) fprintf(stderr, "Failed to create file buffer\n");
-        else
+        if (change_handle == INVALID_HANDLE_VALUE) fprintf(stderr, "Failed to get change notification\n");
+        else while (true)
         {
+            printf("Files changed, updating...\n");
+            system("rmdir . /s /q 2>nul");
+            
+            String pages_path = STRING("..\\pages\0");
+            
+            char buffer[MAX_PATH * 4];
+            memcpy(buffer, pages_path.data, pages_path.size);
+            
+            Growable_String path = {
+                .data     = (u8*)buffer,
+                .size     = pages_path.size - 1,
+                .capacity = ARRAY_SIZE(buffer),
+            };
+            
             LogIndex = fopen("log_index.html", "w");
             
             if (LogIndex == 0) fprintf(stderr, "Failed open log index\n");
@@ -933,6 +929,18 @@ main()
                 
                 GeneratePostamble(LogIndex);
                 fclose(LogIndex);
+            }
+            
+            if (WaitForSingleObject(change_handle, INFINITE) != 0)
+            {
+                fprintf(stderr, "Failed to wait for change notification\n");
+                break;
+            }
+            else if (FindNextChangeNotification(change_handle)) continue;
+            else
+            {
+                fprintf(stderr, "Failed to get next change notification\n");
+                break;
             }
         }
     }

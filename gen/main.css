@@ -1,5 +1,6 @@
 :root {
 	/*--logo-color: #e87007;*/
+	/*ff4d3dff*/
 	--logo-color: #DD571C;
 	--text-color: #191919;
 	--max-content-width: 50em;
@@ -13,7 +14,7 @@ body {
 	color: var(--text-color);
 	font-weight: 400;
 }
-/*ff4d3dff*/
+
 #navbar {
 	margin: 0 auto;
 	max-width: var(--max-content-width);
@@ -159,4 +160,34 @@ a:hover {
 	background-color: black;
 	border: none;
 	text-decoration: none;
+}
+
+.devlog_anchor:hover {
+	padding: 0;
+	margin: 0;
+}
+
+.devlog_anchor:hover div {
+	background-color: black;
+	color: white;
+}
+
+.devlog {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	justify-content: space-between;
+	padding: 0 1em;
+}
+
+.devlog_filename {
+	font-size: 2em;
+	color: #998;
+}
+
+.devlog_title {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	font-size: 2em;
 }
