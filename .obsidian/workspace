@@ -4,7 +4,7 @@
     "type": "split",
     "children": [
       {
-        "id": "919f132033da7ee5",
+        "id": "2c78d9b099e8f32e",
         "type": "leaf",
         "state": {
           "type": "markdown",
@@ -86,7 +86,7 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "919f132033da7ee5",
+  "active": "2c78d9b099e8f32e",
   "lastOpenFiles": [
     "pages/devlogs/000.md",
     "pages/index.md",
