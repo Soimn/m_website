@@ -52,7 +52,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "ff0b6800c599dc34",
@@ -89,6 +90,7 @@
   "active": "2c78d9b099e8f32e",
   "lastOpenFiles": [
     "pages/devlogs/000.md",
+    "pages/about.md",
     "pages/index.md",
     "logos.svg"
   ]

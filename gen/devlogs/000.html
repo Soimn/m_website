@@ -14,7 +14,8 @@
 <li class="navbar_li_divider">|</li>
 <li><a href="../doc_index.html">docs</a></li>
 <li class="navbar_li_divider">|</li>
-<li><a href="https://github.com/Soimn/mm">GitHub</a></li></ul>
+<li><a href="https://github.com/Soimn/mm">GitHub</a></li><li class="navbar_li_divider">|</li>
+<li><a href="../about.html">About</a></li></ul>
 </div>
 <h1 id="title">The First Devlog</h1>
 <p id="date">2022.03.20</p>
@@ -68,7 +69,7 @@ Programming languages should therefore not restrict the programmer to an arbitra
 <br>Firstly, lossy, or faulty, encoding or decoding results in a disconnect between the models. The most obvious example of this is the programmer making a mistake when encoding the solution, and either causing a syntax error, something more grave. Moreover, since humans are flawed, the process of encoding and decoding mental models is both lossy and faulty, making collaborating with several people, and even oneself, hard. This is because the mental model of each person may differ greatly from both every other person's model and the encoded model.
 
 <br>
-<br>Secondly, the coding format may indirectly affect the 'solution space' explored by the programmer. Ideas that are harder to encode will naturally be avoided when the solver of the problem at hand, and the encoder of the mental model, are the same person. This does not only cause problems for lone programmers, but will also ultimately affect the society, making some solutions unfavorable because they are harder to encode.
+<br>Secondly, the coding format may indirectly affect the 'solution space' explored by the programmer. Ideas that are harder to encode will naturally be avoided when the solver of the problem at hand, and the encoder of the mental model, are the same person. This does not only cause problems for lone programmers, but will also ultimately affect the society, making some solutions unfavorable simply because they are harder to encode.
 
 <br>
 <br>Finally, the efficiency of the encoding and decoding process is largely dictated by how much the code format differs from the mental model. Which is only natural, as a coding format that is an exact copy of the mental model's format does not require any work to encode and decode.
@@ -80,9 +81,19 @@ Programming languages should therefore not restrict the programmer to an arbitra
 <br>The problem is most often 'solved' by a committee designing a format and dictating that everyone should adjust their mental model to match. This is often a terrible approach, as it forces people to think in ways that are often inefficient and 'creatively limiting'. Furthermore, the dictated mental model often tend to favor matching beginners, rather than more experienced developers. Which is all well when it can be used as a steppingstone, but is vastly unfavorable for the advancement of technology. However, the alternative of adapting the coding format to every single person is even worse off. This approach makes it almost impossible for any two people to work together, which is frankly a lot worse than lowering the efficiency, or limiting creativity. The compromise I would propose is to base the coding format and intended mental model on the basics of how a computer works, along with well established constructs in programming languages. This is not the most optimal solution, by far, but it would be familiar to experienced programmers, as well as providing beginners with an easy introduction by learning the basics of computers.
 
 <br>
-<br>Now, proposing that something should follow 'established principles and basic theory of a computer', without elaborating on exactly what that means, is almost like saying 'yes, I too like good compromises', while thinking to yourself that you are much smarter, and experienced, than everyone around you. As a preface, I must make it clear that my own experience consists mostly of self-taught game programming in C#, C++ and C with nothing even resembling a half-finished product to speak of.
-TODO: define "the established language constructs" and "the basics of a computer"
+<br>Now, proposing that something should follow 'established principles and basic theory of a computer', without elaborating on exactly what that means, is almost like saying 'yes, I too like good compromises', while thinking to yourself that you are much smarter, and experienced, than everyone around you. Also as a preface, I must make it clear that my own experience consists mostly of self-taught game programming in C#, C++ and C with nothing even resembling a half-finished product to speak of.
 
+<br><h6>The Basics of a Computer
+</h6>As previously stated, programming can be thought of as solving problems and phrasing the solution in a way that is executable by a computer. This implies that the abstract properties of a computer are fundamental to the act of programming. Furthermore, as real life metrics, like time used and power consumed, are of interest, not only are the abstract properties important, but also the actual inner workings, as they dictate these metrics. 
+
+<br>However, once again, we encounter the tradeoff of control vs complexity. To optimally utilize the computer requires a lot of control, which requires the programmer knowing every tiny little detail about the computer. Furthermore, the programmer needs to know every tiny little detail about every single computer the program is to be run on. Which in turn consists of countless combinations of components, which are most often of high complexity themselves. The tactic to 'solve' this problem is once again to recognize some commonalities between computers and make an abstraction that is as close to this, while still being general enough to hold true for every system. 
+
+<br>However, on modern systems, this is much harder than one would think, as even simple things like arithmetic behaves vastly different on x86 and ARM (mostly related to exceptions and bitwise shifts), making constructing a layer of abstraction with minimal loss of detail very hard. On top of that, I, the author, have no experience, whatsoever, with the internals of a modern processor (past the 'basics'), and that's not even talking about the monstrosity that is a GPU. With the problem being a tough tradeoff, and me lacking experience, the solution is in a way doomed to be awful. Moreover, for the solution to be any good, a beginner has to be able to learn it easily without having to study computers for a decade. 
+
+<br>All this signals to me that the solution, which is an ugly tradeoff, is going back to 1975 and basing the model of a computer on systems like the NES. The model of a computer would then consist of a CPU 
+
+<br><h6>Established Language Constructs
+</h6>
 <br><h5>Raising Walls
 </h5>TODO: Conway's Law
 
@@ -90,7 +101,13 @@ TODO: define "the established language constructs" and "the basics of a computer
 </h5>TODO: Getsalt principles
 
 <br><h5>Concept Art
-</h5>TODO: Iteration and tweaking</div>
+</h5>TODO: Iteration and tweaking
+
+<br><h5>Daredevil Programming
+</h5>TODO: Visualization and Bret Victor, Undefined Behaviour and compiler magic
+
+<br><h3>Designing the Language
+</h3>TODO: spec and reasoning</div>
 <div id="footer"></div>
 </body>
 </html>

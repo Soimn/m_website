@@ -82,19 +82,31 @@ body {
 	margin-top: 0;
 }
 
+h2 {
+	font-size: 1.8em;
+	font-weight: bold;
+	margin-bottom: 0.25em;
+}
+
 h3 {
-	font-size: 1.5em;
+	font-size: 1.6em;
 	font-weight: bold;
 	margin-bottom: 0.25em;
 }
 
 h4 {
-	font-size: 1.2em;
+	font-size: 1.3em;
 	font-weight: bold;
 	margin-bottom: 0.25em;
 }
 
 h5 {
+	font-size: 1.1em;
+	font-weight: bold;
+	margin-bottom: 0;
+}
+
+h6 {
 	font-size: 1em;
 	font-weight: bold;
 	margin-bottom: 0;

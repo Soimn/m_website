@@ -145,7 +145,13 @@ GeneratePreamble(FILE* out, String title, umm depth)
     for (umm j = 0; j < depth; ++j) fprintf(out, "../");
     fprintf(out, "doc_index.html\">docs</a></li>\n"
             "<li class=\"navbar_li_divider\">|</li>\n"
-            "<li><a href=\"https://github.com/Soimn/mm\">GitHub</a></li></ul>\n");
+            "<li><a href=\"https://github.com/Soimn/mm\">GitHub</a></li>"
+            "<li class=\"navbar_li_divider\">|</li>\n"
+            "<li><a href=\"");
+    for (umm j = 0; j < depth; ++j) fprintf(out, "../");
+    fprintf(out, "about.html\">About</a></li>");
+    
+    fprintf(out, "</ul>\n");
     fprintf(out, "</div>\n");
 }
 
