@@ -5,6 +5,12 @@
     "gnarliness",
     "metaprogramming",
     "metaprogramming",
-    "Jai"
+    "Jai",
+    "endian",
+    "lookaside",
+    "io",
+    "wikichip",
+    "ruleset",
+    "WhiteBox"
   ]
 }
