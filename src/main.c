@@ -306,7 +306,6 @@ GenerateFile(String contents, String filename, FILE* out, umm depth, bool is_dev
     
     umm heading_level = 0;
     umm decor_level   = 0;
-    umm open_decors   = 0;
     for (; i < contents.size && !encountered_errors; )
     {
         if      (contents.data[i] == '\r') ++i;
@@ -333,11 +332,8 @@ GenerateFile(String contents, String filename, FILE* out, umm depth, bool is_dev
             {
                 if (decor_level != 0)
                 {
-                    if ((open_decors & 1) != 0) fprintf(out, "</span>");
-                    if ((open_decors & 2) != 0) fprintf(out, "</span>");
-                    if ((open_decors & 4) != 0) fprintf(out, "</span>");
+                    fprintf(out, "</span>");
                     decor_level = 0;
-                    open_decors = 0;
                 }
                 
                 fprintf(out, "<br>");
@@ -381,15 +377,17 @@ GenerateFile(String contents, String filename, FILE* out, umm depth, bool is_dev
             }
             else
             {
-                bool is_closing = (decor_level == level);
-                if      (level == 1) fprintf(out, (is_closing ? "</span>" : "<span class=\"i_text\">"));
-                else if (level == 2) fprintf(out, (is_closing ? "</span>" : "<span class=\"b_text\">"));
-                else if (level == 3) fprintf(out, (is_closing ? "</span>" : "<span class=\"bi_text\">"));
+                if (decor_level != 0) fprintf(out, "</span>");
                 
-                if (is_closing) open_decors &= ~((umm)1 << (level - 1));
-                else            open_decors |= (umm)1 << (level - 1);
-                
-                decor_level = level;
+                if (decor_level == level) decor_level = 0;
+                else
+                {
+                    if      (level == 1) fprintf(out, "<span class=\"i_text\">");
+                    else if (level == 2) fprintf(out, "<span class=\"b_text\">");
+                    else if (level == 3) fprintf(out, "<span class=\"bi_text\">");
+                    
+                    decor_level = level;
+                }
                 
                 i = j;
             }
@@ -400,24 +398,14 @@ GenerateFile(String contents, String filename, FILE* out, umm depth, bool is_dev
             
             if (decor_level != 0)
             {
-                if ((open_decors & 1) != 0) fprintf(out, "</span>");
-                if ((open_decors & 2) != 0) fprintf(out, "</span>");
-                if ((open_decors & 4) != 0) fprintf(out, "</span>");
+                fprintf(out, "</span>");
                 decor_level = 0;
-                open_decors = 0;
             }
             
             fprintf(out, "<div class=\"code\">");
             
             while (i < contents.size && contents.data[i] != '\n') i += 1;
             if (i < contents.size && contents.data[i] == '\n') i += 1;
-            
-            if (i != contents.size)
-            {
-                fputc(contents.data[i++], out);
-                line_start = i;
-                line      += 1;
-            }
             
             while (i < contents.size && !encountered_errors)
             {
@@ -536,7 +524,7 @@ GenerateFile(String contents, String filename, FILE* out, umm depth, bool is_dev
                     {
                         code_class = "code_hi_comment";
                     }
-                    else if (i + 4 < contents.size && contents.data[i + 2] == '/' && contents.data[i + 3] == '/' && 
+                    else if (i + 4 < contents.size && contents.data[i + 2] == '/' && contents.data[i + 3] == '/' &&
                              contents.data[i + 4] == ' ')
                     {
                         code_class = "code_err_comment";
@@ -587,6 +575,10 @@ GenerateFile(String contents, String filename, FILE* out, umm depth, bool is_dev
                     fprintf(out, "</span>");
                 }
                 else if (contents.data[i] == '\r') i += 1;
+                else if (contents.data[i] == '&') ++i, fprintf(out, "&amp;");
+                else if (contents.data[i] == '<') ++i, fprintf(out, "&lt;");
+                else if (contents.data[i] == '>') ++i, fprintf(out, "&gt;");
+                else if (contents.data[i] == '"') ++i, fprintf(out, "&quot;");
                 else
                 {
                     fputc(contents.data[i++], out);
@@ -675,11 +667,8 @@ GenerateFile(String contents, String filename, FILE* out, umm depth, bool is_dev
         if (heading_level != 0) fprintf(out, "</h%llu>", heading_level);
         if (decor_level != 0)
         {
-            if ((open_decors & 1) != 0) fprintf(out, "</span>");
-            if ((open_decors & 2) != 0) fprintf(out, "</span>");
-            if ((open_decors & 4) != 0) fprintf(out, "</span>");
+            fprintf(out, "</span>");
             decor_level = 0;
-            open_decors = 0;
         }
     }
     
@@ -695,7 +684,7 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer, umm d
     
     if (path.size + 3 > path.capacity)
     {
-        //// ERROR: 
+        //// ERROR:
         fprintf(stderr, "Path too long. Ended at %.*s\n", (int)path.size, path.data);
         encountered_errors = true;
     }
@@ -713,7 +702,7 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer, umm d
         {
             if (GetLastError() != ERROR_FILE_NOT_FOUND)
             {
-                //// ERROR: 
+                //// ERROR:
                 fprintf(stderr, "Failed to find files\n");
                 encountered_errors = true;
             }
@@ -726,7 +715,7 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer, umm d
                 
                 if (path.size + filename_len + 1 > path.capacity)
                 {
-                    //// ERROR: 
+                    //// ERROR:
                     fprintf(stderr, "Path too long. Ended at %.*s\n", (int)path.size, path.data);
                     encountered_errors = true;
                 }
@@ -741,7 +730,7 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer, umm d
                         {
                             if (!CreateDirectoryA((LPCSTR)(path.data + prefix_len + 1), 0))
                             {
-                                //// ERROR: 
+                                //// ERROR:
                                 fprintf(stderr, "Failed to create directory at %.*s\n",
                                         (int)(path.size - (prefix_len + 1)), path.data + prefix_len + 1);
                                 encountered_errors = true;
@@ -766,7 +755,7 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer, umm d
                         {
                             if (!CopyFile((LPCSTR)path.data, (LPCSTR)(path.data + prefix_len + 1), true))
                             {
-                                //// ERROR: 
+                                //// ERROR:
                                 fprintf(stderr, "Failed to copy file to %.*s\n",
                                         (int)(path.size - (prefix_len + 1)), path.data + prefix_len + 1);
                                 encountered_errors = true;
@@ -776,7 +765,7 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer, umm d
                         {
                             if ((u8*)extension - path.data + sizeof(".html") > path.capacity)
                             {
-                                //// ERROR: 
+                                //// ERROR:
                                 fprintf(stderr, "Path too long to attach .html extension at %.*s\n",
                                         (int)(path.size - (prefix_len + 1)), path.data + prefix_len + 1);
                                 encountered_errors = true;
@@ -788,7 +777,7 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer, umm d
                                 DWORD bytes_read;
                                 if (!ReadFile(read_file_handle, file_buffer.data, MIN((DWORD)file_buffer.size, find_data.nFileSizeLow), &bytes_read, 0) || bytes_read != find_data.nFileSizeLow)
                                 {
-                                    //// ERROR: 
+                                    //// ERROR:
                                     fprintf(stderr, "Failed to read file at %.*s\n", (int)path.size, path.data);
                                     encountered_errors = true;
                                 }
@@ -820,7 +809,7 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer, umm d
                                     
                                     if (gen_file == 0)
                                     {
-                                        //// ERROR: 
+                                        //// ERROR:
                                         fprintf(stderr, "Failed to open file at %.*s\n",
                                                 (int)(path.size - (prefix_len + 1)), path.data + prefix_len + 1);
                                         encountered_errors = true;
@@ -848,7 +837,7 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer, umm d
                     }
                     else
                     {
-                        //// ERROR: 
+                        //// ERROR:
                         printf("Unknown file type! %s %d\n", find_data.cFileName, find_data.dwFileAttributes);
                         encountered_errors = true;
                     }
@@ -863,7 +852,7 @@ GenerateAllFiles(umm prefix_len, Growable_String path, String file_buffer, umm d
                 {
                     if (GetLastError() != ERROR_NO_MORE_FILES)
                     {
-                        //// ERROR: 
+                        //// ERROR:
                         fprintf(stderr, "Failed to find all files\n");
                         encountered_errors = true;
                     }
