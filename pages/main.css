@@ -170,11 +170,17 @@ h6 {
 .code_todo {
 	color: var(--text-color);
 	font-weight: bold;
+	margin-left: 0.5em;
 }
 
 .code_note {
 	color: var(--text-color);
 	font-weight: bold;
+	margin-left: 0.5em;
+}
+
+.code_string {
+	font-style: italic;
 }
 
 a {

@@ -14,6 +14,9 @@
     "WhiteBox",
     "\"ini",
     "neat",
-    "init"
+    "init",
+    "metaprogram",
+    "inlined",
+    "bloaty"
   ]
 }

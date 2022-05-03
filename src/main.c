@@ -556,13 +556,13 @@ GenerateFile(String contents, String filename, FILE* out, umm depth, bool is_dev
                     umm comment_level = 0;
                     while (i < contents.size)
                     {
-                        if (i + 1 < contents.size && contents.data[i] == '/' && contents.data[i] == '*')
+                        if (i + 1 < contents.size && contents.data[i] == '/' && contents.data[i + 1] == '*')
                         {
                             comment_level += 1;
                             fputc(contents.data[i++], out);
                             fputc(contents.data[i++], out);
                         }
-                        else if (i + 1 < contents.size && contents.data[i] == '*' && contents.data[i] == '/')
+                        else if (i + 1 < contents.size && contents.data[i] == '*' && contents.data[i + 1] == '/')
                         {
                             comment_level -= 1;
                             fputc(contents.data[i++], out);
@@ -578,7 +578,23 @@ GenerateFile(String contents, String filename, FILE* out, umm depth, bool is_dev
                 else if (contents.data[i] == '&') ++i, fprintf(out, "&amp;");
                 else if (contents.data[i] == '<') ++i, fprintf(out, "&lt;");
                 else if (contents.data[i] == '>') ++i, fprintf(out, "&gt;");
-                else if (contents.data[i] == '"') ++i, fprintf(out, "&quot;");
+                else if (contents.data[i] == '"')
+                {
+                    fprintf(out, "<span class=\"code_string\">&quot;");
+                    
+                    umm start_i = i;
+                    i += 1;
+                    
+                    while (i < contents.size && contents.data[i] != '"') fputc(contents.data[i++], out);
+                    
+                    if (i == contents.size)
+                    {
+                        //// ERROR:
+                        fprintf(stderr, "ERROR(%llu:%llu): Missing terminating \"\n", line, start_i - line_start + 1);
+                        encountered_errors = true;
+                    }
+                    else ++i, fprintf(out, "&quot;</span>");
+                }
                 else
                 {
                     fputc(contents.data[i++], out);

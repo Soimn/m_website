@@ -35,7 +35,7 @@
 
 <br><h4>What is a programming language?
 </h4>According to the Wikipedia page on the <a href="https://en.wikipedia.org/wiki/History_of_programming_languages">history of programming languages</a>
-<div class="code">&quot;It was eventually realized that programming in assembly language required a great deal of intellectual effort&quot;
+<div class="code"><span class="code_string">&quot;It was eventually realized that programming in assembly language required a great deal of intellectual effort&quot;</span>
 </div>
 Which seems to imply that the reason programming languages came about was that programming in assembly was too hard, and that an easier way of programming computers would come in the form of programming languages. Viewed in a positive light, this statement seems like it makes sense, and would sort of imply that programming languages are a superior lossless representation of machine code that is easier understood by humans. However, when you think about how quality software is made today, a lot of it comes down to having fine grain control of what the computer does. Which, in my mind, is not very far away from programming in assembly. So in short, making software using programming languages is superior to assembly, except for when you want to make software of high quality. Then why was programming in assembly viewed as a problem, when it seems like assembly clearly is useful for some parts of programming?
 
@@ -229,7 +229,7 @@ With procedures come <span class="b_text">return</span>, and call expressions.
 <br>Expressions are built up from basic primitives with operators to produce zero or more values, who's interpretation and usage are determined by their type. There are three things to unravel here: primitives, operators and types.  Of the three, the concept of a type is where I suspect most potential of improvement would lie. For the primitives and operators, I will opt to use what I designed for the last iteration, which looks as follows:
 <div class="code"><span class="code_err_comment">//// primitives</span>
 identifiers  - identifier
-&quot;strings&quot;    - string literal
+<span class="code_string">&quot;strings&quot;</span>    - string literal
 <span class="code_number">20</span>           - integer literal
 <span class="code_number">2</span>.<span class="code_number">0</span>          - <span class="code_keyword">float</span> literal
 <span class="code_bool">true</span>         - boolean literal
@@ -252,7 +252,7 @@ T.(E),                         <span class="code_comment">// T.{}, T.[] parsed a
 
 <span class="code_err_comment">//// Notes</span>
 T.(E) is a cast from the type of E to the type T
-.I is an <span class="code_keyword">enum</span> selector expression, &quot;shorthand&quot; EnumName.I
+.I is an <span class="code_keyword">enum</span> selector expression, <span class="code_string">&quot;shorthand&quot;</span> EnumName.I
 ^ signifies a pointer, pointer type ^T, reference ^E, dereference E^
 [E] postfix is a normal subscript, prefix is an array type specifier
 [] is a slice type specifier
@@ -262,12 +262,6 @@ T.(E) is a cast from the type of E to the type T
 </div>
 
 <br>Something that may appear foreign is the periods between the type and parentheses for casts. This is a syntax I came up with for allowing anonymous struct and array literals, and optionally could be used for inferred casts, with the same format (type period paren expression/-s paren).
-
-<br>
-<br>Now the more interesting topic is types. Types are in my mind data descriptors. They describe how big, how to interpret and how to use a block of bytes, turning useless garbage into information. This is used in all proper statically compiled programming languages, although to varying degree. 
-
-<br>
-<br>TODO: TYPES
 
 <br>
 <br>Again, borrowing from Odin, the language will have variables and constants, which can be declared as follows:
@@ -285,7 +279,137 @@ name0, name1 : type : value0, value1;
 </div>
 
 <br>
-<br>One construct that Odin has, but this language currently lacks, is the <span class="b_text">using</span> declaration and specifier. <span class="b_text">using</span> creates a link between two lexical scopes, which is a nice way to shorten "symbol access paths" (symbol.symbol.symbol). However, it also allows something much more useful when paired with automatic dereferencing of pointers on member access, which is changing struct layout without changing usage code. E.g.
+<br>Now the more interesting topic is types. Types are in my mind data descriptors. They describe how to interpret and how to use, and how big a block of bytes is, turning useless garbage into information. This concept is used in all proper statically compiled programming languages, although to varying degree. 
+
+<br>
+<br>Most languages use types to indicate how big something is, and how to interpret it, but they are often "falling short" when dealing with how it should be used. What I mean by this is that size and interpretation are mostly solved, as apposed to usage. In C, types affect which operators can be used, how they behave and what type of result they produce. It also decides whether the compiler is allowed to do some type of optimizations (volatile) and whether some l-values are directly writable (const). Now, the restrictions and behavior of operators, as well as volatile, are useful effects of types on usage, but they are only a subset of effects that are useful. 
+
+<br>
+<br>One example of a restriction on usage that is useful is introducing some type qualifier like "frame_local", which restricts access for storing a value directly and indirectly in variables or memory ranges that are not also "frame_local". This would help eliminate state creep and dangling pointers in games, and is only one example of a type qualifier that would be a useful addition. What this indicates to me is that users should be able to add type qualifiers with arbitrarily complex rules. Furthermore, I would also suspect that there should be an explicit way of adding and removing these qualifiers, that cannot be accidentally used (e.g. if regular casts could remove these, changing code that involved a cast by introducing a "frame_local" value could silently introduce bugs). Some related work I found was this article on user defined <a href="https://doi.org/10.1145/1064978.1065022">semantic type qualifiers</a>, which might be something that is worth adding to the language in one shape or another. However, this seems to me like something that adds more complexity than it solves problems.
+
+<br>
+<br>I also found something similar, but way more involved and powerful, when searching for more information on "user defined type qualifiers", which was this <a href="https://www.youtube.com/watch?v=zt0OQb1DBko">talk</a>, which serves as a peek into the programming language ATS. What ATS seems to offer, based on that talk, is really powerful user controlled type checking, at the expense of introducing a whole bunch of semantic and syntactic complexity. This actually seems like a reasonable approach for supporting very rich and tight criteria on how the code should behave (e.g. enforcing that resources do not leak on a type level, or asserting that a recursive procedure will terminate). The problem is of course that the language complexity goes through the stratosphere, in exchange for control that is really nice, but has limited usage in non-critical software. This is illustrated in Rust, where the language has some similar concepts to enforce rules on a codebase that aim to increase program security, at the expense of added complexity. However, Rust does not go the whole way, and offers only a partial solution (AFAIK), making the added complexity, in my mind, outweigh the supposed benefits (I have not programmed in Rust, so this might be completely false, and I might be a moron, but this is the impression I have gotten hearing about the language). It would then be nice not to repeat the same (assumed) mistake in this language, and I would suspect that would be achieved by making it easier to detect and fix these problems, instead of trying to build the language around proofs (which will never reflect reality anyway, since the computer might be hit by a cosmic ray, invalidating the supposed proof of correctness). Whether user defined type qualifiers would aid in this is not clear. 
+
+<br>
+<br>Now this could also be solved by introducing metaprogramming and allowing a metaprogram to inspect the compiling program, and look for these things manually. Since metaprogramming adds a lot more of useful functionality than this, whether user defined type qualifiers should be added is then a question of how often they are useful, and if the complexity reduction from searching manually in a metaprogramming is significant enough.
+
+<br>
+<br>As an experiment, I tried implementing "frame_local" using polymorphic procedures and structs in Odin, which almost worked. The three main problems with this mock implementation is the lack of operator overloading (FL_OPNAME is used instead), determining the return type for member access and that it relies heavily on the compiler chucking everything that isn't relevant for the program at runtime when optimizing.
+
+<br><div class="code">package main
+
+<span class="code_keyword">import</span> <span class="code_string">&quot;core:fmt&quot;</span>;
+<span class="code_keyword">import</span> <span class="code_string">&quot;core:reflect&quot;</span>;
+
+Frame_Local :: <span class="code_keyword">struct</span>(T: typeid) { _: T }
+
+FL_Deref :: <span class="code_keyword">proc</span>(fl: Frame_Local(^$T)) -&gt; Frame_Local(T)
+{
+	<span class="code_keyword">return</span> Frame_Local(T){ (transmute(^T)fl)^ };
+}
+FL_Ref :: <span class="code_keyword">proc</span>(fl: ^Frame_Local($T)) -&gt; Frame_Local(^T)
+{
+	<span class="code_keyword">return</span> Frame_Local(^T){ cast(^T) fl };
+}
+FL_Assign :: <span class="code_keyword">proc</span>(fl: ^Frame_Local($T), nfl: T)
+{
+	(cast(^T) fl)^ = nfl;
+}
+FL_Add :: <span class="code_keyword">proc</span>(fl0: Frame_Local($T), fl1: Frame_Local(T)) -&gt; Frame_Local(T)
+{
+	<span class="code_keyword">return</span> Frame_Local(T){ transmute(T)fl0 + transmute(T)fl1 };
+}
+FL_Mul :: <span class="code_keyword">proc</span>(fl0: Frame_Local($T), fl1: Frame_Local(T)) -&gt; Frame_Local(T)
+{
+	<span class="code_keyword">return</span> Frame_Local(T){ transmute(T)fl0 * transmute(T)fl1 };
+}
+
+<span class="code_comment">//<span class="code_note">NOTE</span>: This does not work, but may be possible if struct_by_field_name</span>
+<span class="code_comment">//       produced a constant value that could be used as a typeid</span>
+<span class="code_comment">/* 
+FL_Member :: proc(fl: Frame_Local($T), $member_name: string) -> reflect.struct_field_by_name(T, member_name).type.id
+{
+	fl := fl;
+	field := reflect.struct_field_by_name(T, member_name);
+	return cast(field.type.id) (uintptr(&fl) + field.offset);
+}
+*/</span>
+main :: <span class="code_keyword">proc</span>()
+{
+	a := Frame_Local(<span class="code_keyword">int</span>){};
+	b := FL_Ref(&amp;a);
+	c := FL_Deref(b);
+
+	fmt.println((cast(^<span class="code_keyword">int</span>)&amp;a)^);
+	fmt.println((cast(^<span class="code_keyword">int</span>)&amp;b)^);
+	fmt.println((cast(^<span class="code_keyword">int</span>)&amp;c)^);
+
+	FL_Assign(&amp;a, <span class="code_number">10</span>);
+	fmt.println((cast(^<span class="code_keyword">int</span>)&amp;a)^);
+
+	d := FL_Add(a, a);
+	fmt.println((cast(^<span class="code_keyword">int</span>)&amp;a)^);
+	fmt.println((cast(^<span class="code_keyword">int</span>)&amp;d)^);
+
+	P :: <span class="code_keyword">struct</span> {
+		a: <span class="code_keyword">int</span>,
+		b: <span class="code_keyword">f32</span>,
+	};
+
+	e := Frame_Local(P){};
+	f := FL_Deref(FL_Ref(&amp;e));
+	
+	<span class="code_comment">//<span class="code_note">NOTE</span>: This does not work, which is the desired behaviour. However,</span>
+	<span class="code_comment">//       there should be a way of defining custom error messages for</span>
+	<span class="code_comment">//       these cases that would be more informative than "operator '+'</span>
+	<span class="code_comment">//       is only allowed with numeric expressions"</span>
+	<span class="code_comment">//g := FL_Add(e, f);</span>
+
+	h := FL_Mul(a, d);
+	fmt.println((cast(^<span class="code_keyword">int</span>)&amp;h)^);
+}
+</div>
+
+<br>Since it seems like common user defined type qualifiers might be implementable by using polymorphism and relying on compiler optimizations, or analysis by a metaprogram, and that they carry a fuck ton of complexity if they were to be implemented in the type system properly, it would seem like this is once again a "control vs. usability" tradeoff. I will then opt to go for usability and not include this. However, I will see if there is a nice way of implementing something similar, but simpler, later.
+
+<br>
+<br>Another topic relating to types is polymorphic types, procedure overloading and operator overloading. All of these are missing from C, and are kind of unnecessary. Although they are used extensively, I have rarely seen these features used in a way that is more useful than renaming a function call. Some exceptions are polymorphic dynamic arrays, which take advantage of the type information attached to the dynamic array structure to retrieve the size and alignment of each element, as well as returning the proper element type. This does however have some clear drawbacks, which mostly sums up to code bloat. The usual implementation of polymorphism tends to massively duplicate nearly identical code, only to achieve some programmer convenience by utilizing the type system more than the equivalent implementation in C would. Overloading, on the other hand, tends to only save some typing, but may also allow changing behavior without affecting usage code. These features are really nice to have, but the cost is so large compared to the benefit, that they should probably not be used, at least not as often. However, I would still like to add something like polymorphism, since it adds a lot of expressive power, of course at the expense of bloat. The task is then to find a way of either dealing with this bloat, or better yet, removing it entirely.
+
+<br>Let's start by examining Odin's polymorphism. Procedures and structs in take parameters. Procedures may take both constant and non constant parameters, but structs take only constants. AFAIK every time a new set of constant parameters are passed in, the procedure or struct is duplicated and specialized with the passed values. This is what quickly turns into bloat. One possible remedy is "implicit procedure parameters" (which is something I came up with while writing this). In C there is a trend to make preprocessor macros that hide some parameters to a function, and pass in additional information (e.g. line number, file).
+<div class="code">void* AllocateMemory(unsigned <span class="code_keyword">int</span> size, unsigned <span class="code_keyword">int</span> alignment, unsigned <span class="code_keyword">int</span> line, char* filename);
+#define Allocate(size, alignment) AllocateMemory((size), (alignment), __LINE__, __FILE__)
+#define AllocateStruct(T) (T*)AllocateMemory(sizeof(T), ALIGNOF(T), __LINE__, __FILE__)
+#define AllocateArray(T, size), (T*)AllocateMemory(sizeof(T)*(size), ALIGNOF(T), __LINE__, __FILE__)
+</div>
+The file and line information may then be used for debugging, and may also be removed when building for release. This is solved in Odin by introducing the #caller_location compiler directive, which sort of makes the caller pass in file and line implicitly. This does however not support the other trick in that code snippet, which is turning a type into size and alignment. Aside from the proper return type, this is all the element type specific information a polymorphic array implementation needs. Passing this information as parameters instead of duplicating the code, and hard coding the values, would severely reduce code bloat, at the expense of a more general procedure which cannot be optimized based on the constant values. This concept can be expressed in Odin using a layer of indirection:
+<div class="code">AllocateMemory :: <span class="code_keyword">proc</span>(size: <span class="code_keyword">uint</span>, alignment: <span class="code_keyword">uint</span>, location: Source_Code_Location) -&gt; rawptr
+{
+	<span class="code_comment">//<span class="code_todo">TODO</span>: Allocate memory</span>
+}
+
+Allocate :: inline <span class="code_keyword">proc</span>(size: <span class="code_keyword">uint</span>, alignment: <span class="code_keyword">uint</span>, location := #caller_location) -&gt; rawptr
+{
+	<span class="code_keyword">return</span> AllocateMemory(size, alignment, location);
+}
+
+AllocateStruct :: inline <span class="code_keyword">proc</span>($T: typeid, location := #caller_location) -&gt; ^T
+{
+	<span class="code_keyword">return</span> cast(^T) AllocateMemory(size_of(T), align_of(T), location);
+}
+
+AllocateArray :: inline <span class="code_keyword">proc</span>($T: typeid, size: <span class="code_keyword">uint</span>, location := #caller_location) -&gt; ^T
+{
+	<span class="code_keyword">return</span> cast(^T) AllocateMemory(size_of(T) * size, align_of(T), location);
+}
+</div>
+This will duplicate the all procedures, except the first, for every type they are used with, however this will only duplicate the call, which can be inlined easily. This goes to show that polymorphism can be made less bloaty by introducing helper procedures, and move the polymorphism to them, which sort of implies that the bloat problem with polymorphism might not be an inherent flaw, but rather a side effect of non-optimal usage. At least with an aggressive compiler, this would probably compile out to the code you would want, but that might not be the case every time. Relying on compiler optimizations to untangle and smooth out something is dangerous, since when the compiler eventually fails to do this, there might be a fuck ton of bloat left in the program. This might be the case with Julia, where simple, and moderately complex, expressions are resolved, but complex expressions might exhaust the resolution budget of the compiler, leaving a lot of bloat behind. This can lead to some fun scenarios where making some small changes might change the runtime of the program by several orders of magnitude. 
+<h2>TDOOOOOOOOOOOOOOOOOOO
+</h2>
+<br>Type checked variadic arguments
+<h2>TODOOOOOOOOOOOOOO
+</h2>
+<br><h2>TODOOOOOOOOOOOOOO
+</h2>One construct that Odin has, but this language currently lacks, is the <span class="b_text">using</span> declaration and specifier. <span class="b_text">using</span> creates a link between two lexical scopes, which is a nice way to shorten "symbol access paths" (symbol.symbol.symbol). However, it also allows something much more useful when paired with automatic dereferencing of pointers on member access, which is changing struct layout without changing usage code. E.g.
 <div class="code">Struct0 :: <span class="code_keyword">struct</span>
 {
 	a: <span class="code_keyword">int</span>;
