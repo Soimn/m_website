@@ -265,14 +265,14 @@ T.(E) is a cast from the type of E to the type T
 
 <br>
 <br>Again, borrowing from Odin, the language will have variables and constants, which can be declared as follows:
-<div class="code"><span class="code_comment">// variable declaration</span>
+<div class="code"><span class="code_err_comment">//// variable declaration</span>
 name : type;                          <span class="code_comment">// 'name' will be zero initialized</span>
 name : type = ---;                    <span class="code_comment">// 'name' will not be initialized</span>
 name : type = value;
 name0, name1 : type = values;         <span class="code_comment">// values is a multivalued expression</span>
 name0, name1 : type = value0, value1;
 
-<span class="code_comment">// constant declaration</span>
+<span class="code_err_comment">//// constant declaration</span>
 name : type : value;
 name0, name1 : type : values;         <span class="code_comment">// values is a multivalued expression</span>
 name0, name1 : type : value0, value1;
@@ -282,7 +282,7 @@ name0, name1 : type : value0, value1;
 <br>Now the more interesting topic is types. Types are in my mind data descriptors. They describe how to interpret and how to use, and how big a block of bytes is, turning useless garbage into information. This concept is used in all proper statically compiled programming languages, although to varying degree. 
 
 <br>
-<br>Most languages use types to indicate how big something is, and how to interpret it, but they are often "falling short" when dealing with how it should be used. What I mean by this is that size and interpretation are mostly solved, as apposed to usage. In C, types affect which operators can be used, how they behave and what type of result they produce. It also decides whether the compiler is allowed to do some type of optimizations (volatile) and whether some l-values are directly writable (const). Now, the restrictions and behavior of operators, as well as volatile, are useful effects of types on usage, but they are only a subset of effects that are useful. 
+<br>Most languages use types to indicate how big something is, and how to interpret it, but they are often "falling short" when dealing with how it should be used. What I mean by this is that size and interpretation are mostly solved, as apposed to usage. In C, types affect which operators can be used, how they behave and what type of result they produce. It also decides whether the compiler is allowed to do some type of optimizations (volatile) and whether some l-values are directly writable (const). Now, the restrictions and behaviour of operators, as well as volatile, are useful effects of types on usage, but they are only a subset of effects that are useful. 
 
 <br>
 <br>One example of a restriction on usage that is useful is introducing some type qualifier like "frame_local", which restricts access for storing a value directly and indirectly in variables or memory ranges that are not also "frame_local". This would help eliminate state creep and dangling pointers in games, and is only one example of a type qualifier that would be a useful addition. What this indicates to me is that users should be able to add type qualifiers with arbitrarily complex rules. Furthermore, I would also suspect that there should be an explicit way of adding and removing these qualifiers, that cannot be accidentally used (e.g. if regular casts could remove these, changing code that involved a cast by introducing a "frame_local" value could silently introduce bugs). Some related work I found was this article on user defined <a href="https://doi.org/10.1145/1064978.1065022">semantic type qualifiers</a>, which might be something that is worth adding to the language in one shape or another. However, this seems to me like something that adds more complexity than it solves problems.
@@ -375,14 +375,18 @@ main :: <span class="code_keyword">proc</span>()
 <br>
 <br>Another topic relating to types is polymorphic types, procedure overloading and operator overloading. All of these are missing from C, and are kind of unnecessary. Although they are used extensively, I have rarely seen these features used in a way that is more useful than renaming a function call. Some exceptions are polymorphic dynamic arrays, which take advantage of the type information attached to the dynamic array structure to retrieve the size and alignment of each element, as well as returning the proper element type. This does however have some clear drawbacks, which mostly sums up to code bloat. The usual implementation of polymorphism tends to massively duplicate nearly identical code, only to achieve some programmer convenience by utilizing the type system more than the equivalent implementation in C would. Overloading, on the other hand, tends to only save some typing, but may also allow changing behavior without affecting usage code. These features are really nice to have, but the cost is so large compared to the benefit, that they should probably not be used, at least not as often. However, I would still like to add something like polymorphism, since it adds a lot of expressive power, of course at the expense of bloat. The task is then to find a way of either dealing with this bloat, or better yet, removing it entirely.
 
-<br>Let's start by examining Odin's polymorphism. Procedures and structs in take parameters. Procedures may take both constant and non constant parameters, but structs take only constants. AFAIK every time a new set of constant parameters are passed in, the procedure or struct is duplicated and specialized with the passed values. This is what quickly turns into bloat. One possible remedy is "implicit procedure parameters" (which is something I came up with while writing this). In C there is a trend to make preprocessor macros that hide some parameters to a function, and pass in additional information (e.g. line number, file).
-<div class="code">void* AllocateMemory(unsigned <span class="code_keyword">int</span> size, unsigned <span class="code_keyword">int</span> alignment, unsigned <span class="code_keyword">int</span> line, char* filename);
+<br>
+<br>Let's start by examining Odin's polymorphism. Procedures and structs take parameters. Procedures may take both constant and non-constant parameters, but structs take only constants. AFAIK, every time a new set of constant parameters are passed in, the procedure or struct is duplicated and specialized with the passed values. This is what quickly turns into bloat. One possible remedy is "implicit procedure parameters" (which is something I came up with while writing this). In C there is a trend to make preprocessor macros that hide some parameters to a function, and pass in additional information (e.g. line number, file).
+
+<br><div class="code">void* AllocateMemory(unsigned <span class="code_keyword">int</span> size, unsigned <span class="code_keyword">int</span> alignment, unsigned <span class="code_keyword">int</span> line, char* filename);
 #define Allocate(size, alignment) AllocateMemory((size), (alignment), __LINE__, __FILE__)
 #define AllocateStruct(T) (T*)AllocateMemory(sizeof(T), ALIGNOF(T), __LINE__, __FILE__)
 #define AllocateArray(T, size), (T*)AllocateMemory(sizeof(T)*(size), ALIGNOF(T), __LINE__, __FILE__)
 </div>
-The file and line information may then be used for debugging, and may also be removed when building for release. This is solved in Odin by introducing the #caller_location compiler directive, which sort of makes the caller pass in file and line implicitly. This does however not support the other trick in that code snippet, which is turning a type into size and alignment. Aside from the proper return type, this is all the element type specific information a polymorphic array implementation needs. Passing this information as parameters instead of duplicating the code, and hard coding the values, would severely reduce code bloat, at the expense of a more general procedure which cannot be optimized based on the constant values. This concept can be expressed in Odin using a layer of indirection:
-<div class="code">AllocateMemory :: <span class="code_keyword">proc</span>(size: <span class="code_keyword">uint</span>, alignment: <span class="code_keyword">uint</span>, location: Source_Code_Location) -&gt; rawptr
+
+<br>The file and line information may then be used for debugging, and may also be removed when building for release. This is solved in Odin by introducing the #caller_location compiler directive, which sort of makes the caller pass in file and line implicitly. This does however not support the other trick in that code snippet, which is turning a type into size and alignment. Aside from the proper return type, this is all the element type specific information a polymorphic array implementation needs. Passing this information as parameters instead of duplicating the code, and hard coding the values, would severely reduce code bloat, at the expense of a more general procedure which cannot be optimized based on the constant values. This concept can be expressed in Odin using a layer of indirection:
+
+<br><div class="code">AllocateMemory :: <span class="code_keyword">proc</span>(size: <span class="code_keyword">uint</span>, alignment: <span class="code_keyword">uint</span>, location: Source_Code_Location) -&gt; rawptr
 {
 	<span class="code_comment">//<span class="code_todo">TODO</span>: Allocate memory</span>
 }
@@ -402,10 +406,42 @@ AllocateArray :: inline <span class="code_keyword">proc</span>($T: typeid, size:
 	<span class="code_keyword">return</span> cast(^T) AllocateMemory(size_of(T) * size, align_of(T), location);
 }
 </div>
-This will duplicate the all procedures, except the first, for every type they are used with, however this will only duplicate the call, which can be inlined easily. This goes to show that polymorphism can be made less bloaty by introducing helper procedures, and move the polymorphism to them, which sort of implies that the bloat problem with polymorphism might not be an inherent flaw, but rather a side effect of non-optimal usage. At least with an aggressive compiler, this would probably compile out to the code you would want, but that might not be the case every time. Relying on compiler optimizations to untangle and smooth out something is dangerous, since when the compiler eventually fails to do this, there might be a fuck ton of bloat left in the program. This might be the case with Julia, where simple, and moderately complex, expressions are resolved, but complex expressions might exhaust the resolution budget of the compiler, leaving a lot of bloat behind. This can lead to some fun scenarios where making some small changes might change the runtime of the program by several orders of magnitude. 
+
+<br>This will duplicate the all procedures, except the first, for every type they are used with, however this will only duplicate the call, which can be inlined easily. This goes to show that polymorphism can be made less bloaty by introducing helper procedures, and move the polymorphism to them, which sort of implies that the bloat problem with polymorphism might not be an inherent flaw, but rather a side effect of non-optimal usage. At least with an aggressive compiler, this would probably compile out to the code you would want, but that might not be the case every time. Relying on compiler optimizations to untangle and smooth out something is dangerous, since when the compiler eventually fails to do this, there might be a fuck ton of bloat left in the program. This might be the case with Julia, where simple, and moderately complex, expressions are resolved, but complex expressions might exhaust the resolution budget of the compiler, leaving a lot of bloat behind. This can lead to some fun scenarios where making some small changes might change the runtime of the program by several orders of magnitude.
+
+<br>
+<br>Polymorphism might therefore not be a bad addition. Overloading may also prove more useful when combined with polymorphic procedures and structures. This is because they would allow writing general code that are specialized by the compiler. Overloading does however favor code duplication, since duplicating the code is necessary to specialize, which would again increase code bloat. This could work out if inlining is beneficial, which would then remove the bloat, but this is probably not the case for procedures of a size where the bloat has a significant impact. The easy cop out is to leave this problem to the programmer, but it would be better if there was some facilitation in the language for mitigating code bloat caused by this. One very manual mitigation I can think of is using a jump table for overloaded calls. This would allow more polymorphic procedures to remain unified, but this is very circumstantially helpful, and is very much in the realm of the optimizer, not the language. Another mitigation I can think of is splitting the procedure into several mostly non-polymorphic pieces, and stringing them together in a polymorphic procedure. This is again not a language level mitigation, since now the user is responsible for doing the work, but as of now, I don't see any better alternatives than to leave the mitigation up to the programmer, and be aggressive about code removal when optimizing.
+
+<br>
+<br>Another aspect of overloading that should be considered is whether it should be implicit (like C++) or explicit (like Odin), and which operators should be overloadable. Implicit overloading is generally most useful, while explicit overloading tends to be easier to keep track of. The main deciding factor is how this affects metaprogramming, since allowing addition of new overloads, when some entities are already resolved, will lead to dependency hell. Although I would like explicit overloading, because IMO most sane usage of overloading is very contained, it does reduce the flexibility of the language. Implicit overloading will therefore be preferred if it can mesh nicely with metaprogramming. The deciding factor is then if reasonable implicit overloading can be defined in such a way that there are absolutely no ambiguities, since an ambiguity could lead to choosing the wrong overload at the wrong time. By following Odin's example and heavily restrict implicit conversions, the cases where ambiguities arise shrink dramatically. However, there are still some ambiguities in Odin:
+
+<br><div class="code">A :: <span class="code_keyword">proc</span>(i: <span class="code_keyword">int</span>) -&gt; rune do <span class="code_keyword">return</span> 'A';
+B :: <span class="code_keyword">proc</span>(f: <span class="code_keyword">f32</span>) -&gt; rune do <span class="code_keyword">return</span> 'B';
+AB :: <span class="code_keyword">proc</span>{A, B};
+
+fmt.println(AB(<span class="code_number">1</span>));
+</div>
+
+<br>Both procedures (A and B) are present in the overload set, A will be chosen when the input is 1, However, when only B is in the overload set, B will be chosen instead. If B and the AB call were to compile before A, the wrong overload would be chosen. This issue arises in Odin because of its untyped types, which can implicitly convert to several other types. In this example, 1 is of type untyped int, which can implicitly convert to any numeric type, including both int and f32. One easy way to resolve this is to disallow implicit untyped int to float converions, but this does not cover implicit untyped int to fixed width int conversions, which would also result in an ambiguity. One surefire way to resolve this is to disallow implicit conversions to procedure parameters, however this would also affect operator overloading if it were implemented with overloaded procedures (making a + 1 illegal because of the ambiguity). The only reasonable solution I can think of at the moment is making untyped int to float and untyped float to int conversions illegal, and require that no overloads have ambiguities. Except for the int <=> float conversion, this is how Odin handles it. The reason Odin can get away with looser rules is that the overload set is known beforehand, which allows picking the most fitting overload, instead of picking the first match. Avoiding adding any unnecessary implicit conversions may therefore make implicit overloading doable. One major problem with this is that procedure overloading combined with polymorphism quickly turns into an ambiguous hellhole. The polymorphic procedures would need a tie-braking parameter to remain unambiguous.
+
+<br>// proc headers first solves most problems with non mp procs, but it fails if anything depends on a compile-time call
+<h2>TODOOOOOOOOOOOOOOOOOOOOO
+</h2>
+<br>
+<br>Operator overloading can be implemented in several different ways, but the most intuitive implementation in a language that supports polymorphism and procedure overloading would IMO be defining operators as syntactic sugar for procedure calls. E.g.
+
+<br><div class="code">c = a + b
+<span class="code_comment">// is desugared to</span>
+c = Add(a, b)
+</div>
+
+<br>AFAIK this is kind of how Python handles it, which I find reasonable. This would allow not only regular old operator overloading, but also defining overloads for a range of types.
 <h2>TDOOOOOOOOOOOOOOOOOOO
 </h2>
 <br>Type checked variadic arguments
+<h2>TODOOOOOOOOOOOOOO
+</h2>
+<br>Soft types, casts and conversions
 <h2>TODOOOOOOOOOOOOOO
 </h2>
 <br><h2>TODOOOOOOOOOOOOOO

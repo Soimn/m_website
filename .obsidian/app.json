@@ -17,6 +17,8 @@
     "init",
     "metaprogram",
     "inlined",
-    "bloaty"
+    "bloaty",
+    "inlining",
+    "overloadable"
   ]
 }
