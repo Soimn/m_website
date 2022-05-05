@@ -18,7 +18,7 @@
 <li><a href="../about.html">About</a></li></ul>
 </div>
 <h1 id="title">The First Devlog</h1>
-<p id="date">2022.03.20</p>
+<p id="date">2022.05.05</p>
 <span class="b_text">IMPORTANT NOTE:</span> This 'devlog' is very opinionated and not very scientific (or even logically valid and quite stupid at some points), as the arguments made are based mostly on 'common sense'. I wrote this mostly for my own sake, as to make it clear what I really want from the language and how it should work. Something that should also be noted is that I grew very tired of writing a devlog instead of writing code, which can be seen in the deterioration of my writing and arguments from the Progamming and Coding section and onward.
 
 <br>
@@ -126,7 +126,9 @@ Programming languages should therefore not restrict the programmer to an arbitra
 </h5>The last aspect of programming I want to bring up is what I, as of writing this sentence, call "Daredevil programming". This is a term that describes the current lack of programmer "visibility" in a lot of tools and languages. An example of this is compiler magic and undefined behavior, where the compiler can do whatever it wants to, without signaling the programmer. Another example is the lack of good visualization tools in debuggers, making the programmer either resolve to using a third party tool and painstakingly manage the transferring the state and building models, or construct this model in their heads with the raw data readout from the debugger. Each of these examples show a lack of direct communication with the programmer, making them resort to indirect observations, and since the Daredevil comic book character sees only indirectly via sound and smell, I thought the name was fitting. As I see it, the only real solution to these problems is making compilers simpler and more transparent about how they work and which decisions they have made, as well as beefing up debuggers, since the state most debuggers are in today is quite sad (look at WhiteBox or Casey Muratori's Mustache for an example of what a more beefy debugger could do).
 
 <br><h3>Designing the Language
-</h3>Taking the conclusion on what a language is and the observations on different aspects of programming into account, the time has come to begin designing the language. Now, instead of starting with assembly and building upward, I am going to start at the middle and build in both directions. The middle is in this case structured programming. I am opting to rip most of this from C, in an effort to preserve the same "mental model of programming". The language will then have the concept of a statement, blocks of statements, control structures and procedures. The control structures need a condition, which I again rip from C by introducing the concept of an expression. I assume that nothing introduced yet seems alien, and will therefore skip explaining how they work. Now, if going strictly with the C versions, an example program could look like:
+</h3><span class="b_text">Disclaimer</span>: this section is highly messy and is more a brain dump than anything.
+
+<br>Taking the conclusion on what a language is and the observations on different aspects of programming into account, the time has come to begin designing the language. Now, instead of starting with assembly and building upward, I am going to start at the middle and build in both directions. The middle is in this case structured programming. I am opting to rip most of this from C, in an effort to preserve the same "mental model of programming". The language will then have the concept of a statement, blocks of statements, control structures and procedures. The control structures need a condition, which I again rip from C by introducing the concept of an expression. I assume that nothing introduced yet seems alien, and will therefore skip explaining how they work. Now, if going strictly with the C versions, an example program could look like:
 <div class="code">&lt;some way of defining a procedure&gt;
 {
 	&lt;statement&gt;
@@ -223,7 +225,7 @@ procedure_type { procedure_body }
 With procedures come <span class="b_text">return</span>, and call expressions.
 
 <br>
-<br>Everything up until now has been added kind of ad hoc, without much explanation. The reason for that is twofold. Firstly, these are constructs that I am certain should be in the language, and the specifics (syntax and semantics) have proven themselves both in actual use in Odin and in the design of previous iterations. Secondly, I am trying to avoid digging a monstrous hole by nitpicking every little detail, and instead relying more on what has "proven" to be effective to some degree. However, for the remaining topics, that will change. First off is expressions.
+<br>Everything up until now has been added kind of ad hoc, without much explanation. The reason for that is twofold. Firstly, these are constructs that I am certain should be in the language, and the specifics (syntax and semantics) have proven themselves both in actual use in Odin and in the design of previous iterations. Secondly, I am trying to avoid digging a monstrous hole by nitpicking every little detail, and instead relying more on what has "proven" to be effective to some degree. However, for the remaining topics, that will change (or I planned to, but it ended up being way more hand-wavey). First off is expressions.
 
 <br>
 <br>Expressions are built up from basic primitives with operators to produce zero or more values, who's interpretation and usage are determined by their type. There are three things to unravel here: primitives, operators and types.  Of the three, the concept of a type is where I suspect most potential of improvement would lie. For the primitives and operators, I will opt to use what I designed for the last iteration, which looks as follows:
@@ -422,11 +424,8 @@ AB :: <span class="code_keyword">proc</span>{A, B};
 fmt.println(AB(<span class="code_number">1</span>));
 </div>
 
-<br>Both procedures (A and B) are present in the overload set, A will be chosen when the input is 1, However, when only B is in the overload set, B will be chosen instead. If B and the AB call were to compile before A, the wrong overload would be chosen. This issue arises in Odin because of its untyped types, which can implicitly convert to several other types. In this example, 1 is of type untyped int, which can implicitly convert to any numeric type, including both int and f32. One easy way to resolve this is to disallow implicit untyped int to float converions, but this does not cover implicit untyped int to fixed width int conversions, which would also result in an ambiguity. One surefire way to resolve this is to disallow implicit conversions to procedure parameters, however this would also affect operator overloading if it were implemented with overloaded procedures (making a + 1 illegal because of the ambiguity). The only reasonable solution I can think of at the moment is making untyped int to float and untyped float to int conversions illegal, and require that no overloads have ambiguities. Except for the int <=> float conversion, this is how Odin handles it. The reason Odin can get away with looser rules is that the overload set is known beforehand, which allows picking the most fitting overload, instead of picking the first match. Avoiding adding any unnecessary implicit conversions may therefore make implicit overloading doable. One major problem with this is that procedure overloading combined with polymorphism quickly turns into an ambiguous hellhole. The polymorphic procedures would need a tie-braking parameter to remain unambiguous.
+<br>Both procedures (A and B) are present in the overload set, A will be chosen when the input is 1, However, when only B is in the overload set, B will be chosen instead. If B and the AB call were to compile before A, the wrong overload would be chosen. This issue arises in Odin because of its untyped types, which can implicitly convert to several other types. In this example, 1 is of type untyped int, which can implicitly convert to any numeric type, including both int and f32. One easy way to resolve this is to disallow implicit untyped int to float converions, but this does not cover implicit untyped int to fixed width int conversions, which would also result in an ambiguity. One surefire way to resolve this is to disallow implicit conversions to procedure parameters, however this would also affect operator overloading if it were implemented with overloaded procedures (making a + 1 illegal because of the ambiguity). The only reasonable solution I can think of at the moment is making untyped int to float and untyped float to int conversions illegal, and require that no overloads have ambiguities. Except for the int <=> float conversion, this is how Odin handles it. The reason Odin can get away with looser rules is that the overload set is known beforehand, which allows picking the most fitting overload, instead of picking the first match. Avoiding adding any unnecessary implicit conversions may therefore make implicit overloading doable. One major problem with this is that procedure overloading combined with polymorphism quickly turns into an ambiguous hellhole. The polymorphic procedures would need a tie-braking parameter to remain unambiguous. This is not always possible without introducing a lot of friction on the programmer, which leads me to believe that adding overloads from a metaprogram is a bad idea. More on that later.
 
-<br>// proc headers first solves most problems with non mp procs, but it fails if anything depends on a compile-time call
-<h2>TODOOOOOOOOOOOOOOOOOOOOO
-</h2>
 <br>
 <br>Operator overloading can be implemented in several different ways, but the most intuitive implementation in a language that supports polymorphism and procedure overloading would IMO be defining operators as syntactic sugar for procedure calls. E.g.
 
@@ -460,18 +459,40 @@ Selector :: <span class="code_keyword">proc</span>($T: typeid, $name: string) -&
 }
 </div>
 
-<br>Although this also has some flaws, since the member operator repeats the lookup of the member information for no good reason other than the limitations of the language. Additionally, both of the implementations have a problem of being too general, which indicates that there should be a way of narrowing the accepted types for each parameter.
-<h2>TDOOOOOOOOOOOOOOOOOOO
-</h2>
-<br>Type checked variadic arguments
-<h2>TODOOOOOOOOOOOOOO
-</h2>
-<br>Soft types, casts and conversions
-<h2>TODOOOOOOOOOOOOOO
-</h2>
-<br><h2>TODOOOOOOOOOOOOOO
-</h2>One construct that Odin has, but this language currently lacks, is the <span class="b_text">using</span> declaration and specifier. <span class="b_text">using</span> creates a link between two lexical scopes, which is a nice way to shorten "symbol access paths" (symbol.symbol.symbol). However, it also allows something much more useful when paired with automatic dereferencing of pointers on member access, which is changing struct layout without changing usage code. E.g.
-<div class="code">Struct0 :: <span class="code_keyword">struct</span>
+<br>Although this also has some flaws, both of the implementations have a problem of being too general, which indicates that there should be a way of narrowing the accepted types for each parameter. Odin supports some kind of narrowing with type slicing and where clauses. Type slicing is a way of making aliases to polymorphic types, and specifying patterns they should match, while where clauses can be used to reject certain specializations by requiring a condition to be true.
+
+<br><div class="code"><span class="code_err_comment">//// type slicing</span>
+<span class="code_keyword">proc</span>(t: $T/[]$E) <span class="code_comment">// t can be any type T that is a slice of any type E</span>
+<span class="code_keyword">proc</span>(t: $T/<span class="code_keyword">int</span>)  <span class="code_comment">// t can be any type T that is an int</span>
+<span class="code_keyword">proc</span>(t: $T/$E/Frame_Local($S)) <span class="code_comment">// t can be any type T, E that is a Frame_Local with the parameter of any type S</span>
+
+
+<span class="code_comment">// where clause</span>
+<span class="code_keyword">proc</span>(t: $T) where T == <span class="code_keyword">int</span> <span class="code_comment">// only type match against invocations where T is an int</span>
+</div>
+
+<br>Where clauses aid type slicing by allowing a set of typeids to pass, instead of every type, or just one (e.g. proc(t: $T) allows every type, proc(t: int) allows single, proc(t: $T) where T == int || T == f32 allows a closed set). I can't find any immediate weakness with type slicing, but where clauses, as they work in Odin, do have a drawback. The problem is that they only accept an expression, and since Odin does not support compile time execution, this cannot involve a regular procedure call. The solution to this is introducing compile time execution, and allowing where clauses to execute arbitrary code at compile time. This is kind of what Jai does, which brings a ton of expressive power to the table. However, it also introduces a whole lot of complexity in both the language and compiler. In this case compile time execution can be introduced whenever, and it won't affect the where clauses, only limit the expressiveness, which is why I will opt to see if this is something that is necessary before deciding to go with it.
+ 
+
+<br>Another topic dealing with types is variadic arguments. In C this is done rather poorly, with no type information available at all, but in Odin this is improved by adding the type 'any', which serves as a general runtime container with type information. This 'any' type allows writing type safe print procedures, at the expense of taking more space and introducing one layer of indirection. I my opinion, this approach is quite reasonable. However, what I don't necessarily agree with is the decision to bake this into the calling convention. Although writing procedure calls with variable arguments, like in C, is nice, it would be just as fine to add a bit of syntax, and remove the weirdness from the calling convention. What I would propose is something like the following:
+
+<br><div class="code"><span class="code_comment">// Turn this</span>
+A :: <span class="code_keyword">proc</span>(a: ..any)
+A(<span class="code_number">1</span>, <span class="code_number">2</span>, <span class="code_number">3</span>, <span class="code_number">4</span>)
+<span class="code_comment">// into this</span>
+A :: <span class="code_keyword">proc</span>(a: []any)
+A(.[<span class="code_number">1</span>, <span class="code_number">2</span>, <span class="code_number">3</span>, <span class="code_number">4</span>])
+</div>
+
+<br>Which seems like a weird change, since weird syntax is just replaced with some other weird syntax. However, this slight change allows the procedure to use the C calling convention, instead of a custom calling convention that specifies how the 'any' arguments are passed. This is all possible due to the inferred type of the array literal (.[]). This also easily allows several variadic argument lists, by turning them into arrays of type tagged pointers. I will opt to do it this way because I would like to keep the C calling convention for easy interop with C.
+
+<br>
+<br>Finally, Odin has the concept of untyped types, which are types that exist to allow restricted implicit conversions. This is to allow the number 1 to implicitly convert to any numerical type, instead of having to tag every numeric literal with the intended type and casting. This is a concept that seems highly useful, although I am a bit put off by the name. I have decided to call these types 'soft types' instead, as apposed to regular typed (like int) which would be 'hard types'. The whole reason for doing this is to have a very strict regime on implicit conversions, so that overloading becomes less ambiguous. The question is then how complex these rules should be, since the soft type rules could be very simple, at the expense of convenience, or they could incorporate a lot of special cases to smooth this out. An example of such a special case is with operators vs. procedure calls (a + 1 could incorporate more implicit casts than c(1)), but this would not help if operators are replaced with procedure calls for operator overloading. This seems like a kind of lose lose situation, which indicates to me that I should probably reconsider how adding overloads should work. The problem is that, if the metaprogram can add overloads at any point, the compilation might never complete, since this could cause deadlocks due to unresolved dependencies due to implicit conversion ambiguities. One possible mitigation is to use explicit overloading, like in Odin, and allowing overloads to be added to this set. This would limit the dependency hell, but it would not solve the problem, and it would also limit the expressiveness of the language by not allowing addition of overloads besides editing the overload list. The best decision for the language would probably be to go with implicit overloading, and I will therefore opt to go with this and delay the decision on how to deal with adding overloads after experimenting more with metaprogramming.
+
+<br>
+<br>One construct that Odin has, but this language currently lacks, is the <span class="b_text">using</span> declaration and specifier. <span class="b_text">using</span> creates a link between two lexical scopes, which is a nice way to shorten "symbol access paths" (symbol.symbol.symbol). However, it also allows something much more useful when paired with automatic dereferencing of pointers on member access, which is changing struct layout without changing usage code. E.g.
+
+<br><div class="code">Struct0 :: <span class="code_keyword">struct</span>
 {
 	a: <span class="code_keyword">int</span>;
 	b: <span class="code_keyword">int</span>;
@@ -482,11 +503,13 @@ Struct1 :: <span class="code_keyword">struct</span>
 {
 	a: <span class="code_keyword">int</span>;
 	
-	<span class="code_keyword">using</span> cold: ^<span class="code_keyword">struct</span>
+	Cold :: <span class="code_keyword">struct</span>
 	{
 		b: <span class="code_keyword">int</span>;
 		c: <span class="code_keyword">int</span>;
 	};
+	
+	<span class="code_keyword">using</span> cold: ^Cold;
 }
 
 main :: <span class="code_keyword">proc</span>
@@ -495,7 +518,7 @@ main :: <span class="code_keyword">proc</span>
 	
 	<span class="code_comment">// problem: how to reference the type of cold?</span>
 	<span class="code_comment">// problem: how to remove the pointer from the type of cold?</span>
-	s1_cold := ;;;;;;;;;;;;;
+	s1_cold := Struct1.Cold.{<span class="code_number">0</span>, <span class="code_number">0</span>};
 	s1 := Struct1.{<span class="code_number">0</span>, ^s1_cold};
 	
 	s0.a = s0.b + s0.c;
@@ -503,8 +526,11 @@ main :: <span class="code_keyword">proc</span>
 }
 </div>
 
-<br>Tools:
-terminal, text editor, version control system, visual debugger with graphics debugging, packet sniffing and other shit</div>
+<br>Efficient usage of this requires nested struct declarations and the ability to access those nested structs. Both using and nested structs will be part of the language.
+
+<br>
+<br><h2>Conclusion
+</h2>That concludes what I would consider the foundation of the language. There are still constructs I mean to add, like modules or packages, but this will have to wait, as I am now going to implement this design and determine what needs to change. </div>
 <div id="footer"></div>
 </body>
 </html>
